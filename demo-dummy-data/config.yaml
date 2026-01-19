@@ -1,0 +1,101 @@
+# Komplai Demo Data Pipeline Configuration
+
+# Data sources
+data_sources:
+  excel_path: "/mnt/user-data/uploads/Komplai_Demo_Master__Claude_.xlsx"
+  google_sheet_id: "1KXGIa1G8q7PMMC5FSbj7mzgIaszRMHsikevdVpw_0Aw"
+  google_credentials: "/home/claude/komplai_demo_pipeline/config/google_service_account.json"
+
+# Email configuration
+email:
+  smtp_server: "smtp.gmail.com"
+  smtp_port: 587
+  sender_email: "demo-data@komplai.local"  # Update with actual email
+  sender_password: ""  # Update with Gmail App Password
+  recipient_email: "demo@letskomplai.com"
+  delay_between_emails: 60  # seconds
+
+# Templates
+templates:
+  template_dir: "/home/claude/komplai_demo_pipeline/templates"
+  invoice_template: "invoice_template.html"
+  bill_template: "bill_template.html"
+  statement_template: "statement_template.html"
+
+# Output directories
+output:
+  base_dir: "./output"
+  invoices_dir: "invoices"
+  bills_dir: "bills"
+  statements_dir: "statements"
+
+# Pipeline settings
+pipeline:
+  start_date: "2026-01-05"  # First Monday of 2026
+  run_day: "monday"
+  run_time: "10:00"
+  timezone: "Asia/Kolkata"
+  
+  # Generation frequencies (per week)
+  invoices_per_week: 2
+  bills_per_week: 4
+  
+  # Financial settings
+  base_exchange_rate: 85.0  # USD to INR
+  anomaly_rate: 0.05  # 5% of transactions
+  recurring_price_increase: 0.05  # 5% annual increase
+  
+  # Validation settings
+  validation:
+    strict_mode: true
+    log_errors: true
+    skip_on_error: true
+
+# TDS/Withholding Tax Configuration
+tax:
+  # India TDS Sections and Rates
+  tds_sections:
+    "194I":  # Rent
+      rate: 0.10
+      threshold: 240000  # Annual threshold
+      applies_to: ["Rent Expense", "Office Rent", "Equipment Rent"]
+    
+    "194C":  # Contractor/Advertising
+      rate_individual: 0.01
+      rate_corporate: 0.02
+      threshold: 30000  # Annual threshold (increased to 50,000 from FY 2025-26)
+      applies_to: ["Repairs and Maintenance", "Advertising And Marketing", "Contractor Expense", "Janitorial Expense"]
+    
+    "194J":  # Professional/Technical Services
+      rate_professional: 0.10
+      rate_technical: 0.02
+      threshold: 50000  # Annual threshold (new from FY 2025-26)
+      applies_to: ["Consultant Expense", "Professional Services", "Technical Services", "Accounting Services", "Legal Services"]
+    
+    "194H":  # Commission/Brokerage
+      rate: 0.05
+      threshold: 15000
+      applies_to: ["Commission Expense", "Brokerage"]
+  
+  # US Withholding Tax
+  us_withholding:
+    default_rate: 0.30
+    treaty_rate: 0.00  # For demo, assume treaty exemption
+    applies_to_foreign: true
+
+# Monitoring and Logging
+monitoring:
+  log_level: "INFO"
+  log_file: "/home/claude/komplai_demo_pipeline/logs/pipeline.log"
+  enable_dashboard: true
+  alert_on_errors: true
+  alert_threshold: 5  # Alert if more than 5 errors in single run
+
+# Bank account details (for PDFs)
+bank_details:
+  account_name: "Acme Technologies Private Limited"
+  account_number: "123456789012"
+  ifsc_code: "HDFC0000123"
+  bank_name: "HDFC Bank"
+  branch: "Koramangala, Bangalore"
+  upi_id: "acmetech@hdfcbank"
