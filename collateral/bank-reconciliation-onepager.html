@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Komplai - Bank Reconciliation One-Pager</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --deep-forest: #0A1F1C;
+            --teal-accent: #4DB6AC;
+            --teal-dark: #3D9A8F;
+            --soft-mint: #C8E6C9;
+            --light-green: #E8F5E9;
+            --gray-900: #111827;
+            --gray-700: #374151;
+            --gray-600: #4b5563;
+            --gray-400: #9ca3af;
+            --gray-100: #f3f4f6;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--gray-900);
+            line-height: 1.4;
+            background: var(--white);
+        }
+
+        .page {
+            width: 8.5in;
+            height: 11in;
+            margin: 0 auto;
+            padding: 0.4in;
+            background: var(--white);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            margin-bottom: 0.2in;
+            padding-bottom: 0.15in;
+            border-bottom: 2px solid var(--teal-accent);
+        }
+
+        .logo-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+
+        .logo img {
+            height: 55px;
+            width: auto;
+        }
+
+        .tagline {
+            font-size: 12px;
+            color: var(--gray-600);
+        }
+
+        .headline-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: space-between;
+        }
+
+        h1 {
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gray-900);
+            line-height: 1.15;
+        }
+
+        .subhead {
+            font-size: 12px;
+            color: var(--gray-600);
+            margin-top: 3px;
+        }
+
+        /* Problem Section */
+        .problem-section {
+            background: var(--gray-100);
+            padding: 0.15in;
+            border-radius: 6px;
+            margin-bottom: 0.18in;
+        }
+
+        .problem-section h2 {
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--teal-accent);
+            margin-bottom: 5px;
+        }
+
+        .problem-section p {
+            font-size: 12px;
+            color: var(--gray-700);
+            line-height: 1.5;
+        }
+
+        /* Solution Section */
+        .solution-section {
+            margin-bottom: 0.18in;
+        }
+
+        .solution-section > h2 {
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.12in;
+            text-align: center;
+        }
+
+        .columns {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.15in;
+        }
+
+        .column {
+            background: var(--white);
+            border: 1px solid var(--gray-100);
+            border-radius: 6px;
+            padding: 0.12in;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .column-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .column-content h3 {
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--teal-accent);
+            margin-bottom: 6px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid var(--soft-mint);
+        }
+
+        .column-content p {
+            font-size: 12px;
+            color: var(--gray-700);
+            line-height: 1.45;
+        }
+
+        .column-image {
+            width: 100%;
+            height: 1.4in;
+            object-fit: cover;
+            object-position: top left;
+            border-radius: 4px;
+            border: 1px solid var(--gray-200);
+            margin-top: 8px;
+        }
+
+        .image-caption {
+            font-size: 8px;
+            color: var(--gray-400);
+            margin-top: 3px;
+            font-style: italic;
+            flex-shrink: 0;
+        }
+
+        /* Proof Points */
+        .proof-section {
+            background: var(--deep-forest);
+            color: var(--white);
+            padding: 0.15in;
+            border-radius: 6px;
+            margin-bottom: 0.15in;
+        }
+
+        .proof-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.15in;
+            text-align: center;
+        }
+
+        .proof-item .number {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .proof-item .label {
+            font-size: 10px;
+            opacity: 0.9;
+            margin-top: 3px;
+        }
+
+        /* How It Works */
+        .how-section {
+            margin-bottom: 0.15in;
+        }
+
+        .how-section h2 {
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--gray-900);
+            margin-bottom: 0.08in;
+            text-align: center;
+        }
+
+        .flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .flow-step {
+            background: var(--gray-100);
+            padding: 6px 10px;
+            border-radius: 16px;
+            font-size: 10px;
+            color: var(--gray-700);
+            font-weight: 500;
+        }
+
+        .flow-arrow {
+            color: var(--teal-accent);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* CTA */
+        .cta-section {
+            background: linear-gradient(135deg, var(--deep-forest), var(--teal-dark));
+            color: var(--white);
+            padding: 0.18in;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--teal-accent);
+            color: var(--white);
+            padding: 8px 24px;
+            border-radius: 5px;
+            font-weight: 600;
+            font-size: 12px;
+            text-decoration: none;
+        }
+
+        .cta-contact {
+            font-size: 10px;
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .page {
+                padding: 0.35in;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-section">
+                <div class="logo">
+                    <img src="../komplai-logo.png" alt="Komplai">
+                </div>
+                <div class="tagline">Agentic automation for finance teams</div>
+            </div>
+            <div class="headline-section">
+                <h1>Stop Spending Hours<br>Matching Transactions</h1>
+                <p class="subhead">Bank reconciliation that learns your patterns and handles matching automatically</p>
+            </div>
+        </header>
+
+        <!-- Problem Section -->
+        <section class="problem-section">
+            <h2>The Problem</h2>
+            <p>Bank reconciliation eats up hours every month. Transaction descriptions are vague. Volumes keep growing. TDS and tax adjustments need manual calculation. And every month, you're looking up the same vendors and making the same matching decisions you made last month.</p>
+        </section>
+
+        <!-- Solution Section -->
+        <section class="solution-section">
+            <h2>The Solution: Bank Reconciliation With Memory</h2>
+            <div class="columns">
+                <div class="column">
+                    <div class="column-content">
+                        <h3>Confidence-Scored Matching</h3>
+                        <p>Komplai matches bank transactions to your books and shows you why. Each match includes a confidence score. Exact matches get 100%. TDS-adjusted matches calculate net amounts automatically.</p>
+                    </div>
+                    <img src="../demo-frames/memory-demo/frame_008.jpg" alt="Reconciliation with match reasoning" class="column-image">
+                    <p class="image-caption">Match reasoning with confidence scores</p>
+                </div>
+                <div class="column">
+                    <div class="column-content">
+                        <h3>Memory That Learns</h3>
+                        <p>The AI remembers how you've handled similar transactions. "Memory Lookup" badges show when patterns were found. Knowledge stays in the system even when team members leave.</p>
+                    </div>
+                    <img src="../demo-frames/memory-demo/frame_009.jpg" alt="Memory lookup in reconciliation" class="column-image">
+                    <p class="image-caption">Memory lookup with similarity scores</p>
+                </div>
+                <div class="column">
+                    <div class="column-content">
+                        <h3>Sorted by Confidence</h3>
+                        <p>Transactions land in three queues: Fast Track for one-click approvals, Needs Review for items requiring judgment, and Completed. You know exactly where to spend your time.</p>
+                    </div>
+                    <img src="../demo-frames/main-demo/frame_013.jpg" alt="Books reconciliation progress" class="column-image">
+                    <p class="image-caption">Task progress and queue management</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Proof Points -->
+        <section class="proof-section">
+            <div class="proof-grid">
+                <div class="proof-item">
+                    <div class="number">65%</div>
+                    <div class="label">transactions matched on day 1</div>
+                </div>
+                <div class="proof-item">
+                    <div class="number">30 min</div>
+                    <div class="label">to go live</div>
+                </div>
+                <div class="proof-item">
+                    <div class="number">10</div>
+                    <div class="label">active pilots</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works -->
+        <section class="how-section">
+            <h2>How It Works</h2>
+            <div class="flow">
+                <span class="flow-step">Connect bank + ERP</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step">AI analyzes history</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step">Transactions matched</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step">You approve, AI learns</span>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta-section">
+            <h2>See Komplai Automate Your Reconciliation In A 15-Minute Demo</h2>
+            <a href="https://calendar.google.com/calendar/appointments/schedules/AcZssZ13_PU25qP6mHW9P6VCKYXD9vRfwvxQDP8ZlxUJD1Un4mC20CLjx0zag4E9-oPAYaqjxMlGhN29" class="cta-button">Book a Demo</a>
+            <p class="cta-contact">contact@letskomplai.com</p>
+        </section>
+    </div>
+</body>
+</html>

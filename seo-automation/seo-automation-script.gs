@@ -10,6 +10,7 @@
  *    - WORDPRESS_SITE_URL: Your WordPress site URL (e.g., https://yoursite.com)
  *    - WORDPRESS_USERNAME: Your WordPress username
  *    - WORDPRESS_APP_PASSWORD: WordPress Application Password (create at Users > Profile)
+ *    - NOTIFICATION_EMAIL: Email address to receive trigger run notifications
  * 4. Run setup() once to authorize permissions
  */
 
@@ -38,27 +39,290 @@ const STATUS = {
   ERROR: 'Error'
 };
 
-// Komplai company context for content alignment
-const KOMPLAI_CONTEXT = {
-  companyDescription: 'Komplai is an AI-powered accounting automation platform for mid-market finance teams',
-  clientPainPoints: [
-    'Multi-entity consolidation with currency conversion and tight month-end deadlines',
-    'Consultant dependency for finance teams (institutional knowledge walks out the door when people leave)',
-    'Manual reconciliation across 10-15 bank accounts and payment systems',
-    'ERP limitations (QuickBooks cannot scale, SAP is overkill for mid-market)',
-    '"Show me 50% value and I\'ll pilot" mentality from busy CFOs'
-  ],
-  targetAudience: {
-    revenueRange: '$5-50M revenue companies',
-    teamSize: '2-8 person finance teams',
-    roles: ['CFOs', 'Controllers', 'Finance Directors', 'VP Finance']
-  },
-  valuePropositions: [
-    'AI-powered automation that learns your accounting patterns over time',
-    'Continuous close (not just faster month-end, but real-time financial visibility)',
-    'Knowledge stays in the system, not with consultants who leave'
-  ]
-};
+// GitHub URLs for dynamic context loading
+// Set these in Script Properties: File > Project Settings > Script Properties
+// GITHUB_CONTEXT_URL: Raw URL to Komplai_Context_Canonical.md
+// GITHUB_HUMANIZER_URL: Raw URL to humanizer-main/SKILL.md
+
+/**
+ * Fetch content from a GitHub raw URL
+ * @param {string} url - The raw GitHub URL to fetch
+ * @returns {string} The content of the file
+ */
+function fetchFromGitHub(url) {
+  if (!url || url.trim() === '') {
+    throw new Error('GitHub URL is empty. Please set GITHUB_CONTEXT_URL and GITHUB_HUMANIZER_URL in Script Properties.\n\nGo to: File > Project Settings > Script Properties\n\nAdd these two properties:\n- GITHUB_CONTEXT_URL: https://raw.githubusercontent.com/YOUR_USER/komplai-non-technical/main/Komplai_Context_Canonical.md\n- GITHUB_HUMANIZER_URL: https://raw.githubusercontent.com/YOUR_USER/komplai-non-technical/main/humanizer-main/SKILL.md');
+  }
+  const response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  if (response.getResponseCode() !== 200) {
+    throw new Error('Failed to fetch from GitHub: ' + url + ' (Status: ' + response.getResponseCode() + ')');
+  }
+  return response.getContentText();
+}
+
+/**
+ * Parse the Komplai_Context_Canonical.md file and extract key sections
+ * @param {string} markdown - The raw markdown content
+ * @returns {Object} Parsed context object
+ */
+function parseContextFile(markdown) {
+  const context = {
+    companyOverview: '',
+    positioning: '',
+    tagline: '',
+    targetICP: '',
+    productCapabilities: [],
+    painPoints: [],
+    voiceGuidelines: { dos: [], donts: [] },
+    messagingByAudience: {}
+  };
+
+  // Extract Company Overview section
+  const overviewMatch = markdown.match(/## Company Overview[\s\S]*?(?=## |\n---)/);
+  if (overviewMatch) {
+    const overview = overviewMatch[0];
+
+    // Extract specific fields
+    const whatIs = overview.match(/\*\*What Komplai is:\*\*\s*([^\n]+)/);
+    if (whatIs) context.companyOverview = whatIs[1].trim();
+
+    const positioning = overview.match(/\*\*Core positioning:\*\*\s*([^\n]+)/);
+    if (positioning) context.positioning = positioning[1].trim();
+
+    const tagline = overview.match(/\*\*Tagline:\*\*\s*([^\n]+)/);
+    if (tagline) context.tagline = tagline[1].trim();
+
+    const icp = overview.match(/\*\*Target ICP:\*\*\s*([^\n]+)/);
+    if (icp) context.targetICP = icp[1].trim();
+  }
+
+  // Extract Product Capabilities (7 modules)
+  const capabilitiesMatch = markdown.match(/## Product Capabilities[\s\S]*?(?=## Integrations|## |\n---)/);
+  if (capabilitiesMatch) {
+    const caps = capabilitiesMatch[0];
+    const moduleMatches = caps.matchAll(/### \d+\.\s+([^\n]+)[\s\S]*?(?=### \d+\.|$)/g);
+    for (const match of moduleMatches) {
+      const moduleName = match[1].trim();
+      const moduleContent = match[0];
+
+      // Extract key features
+      const keyFeaturesMatch = moduleContent.match(/\*\*Key features:\*\*[\s\S]*?(?=\*\*|### |$)/);
+      const features = [];
+      if (keyFeaturesMatch) {
+        const featureLines = keyFeaturesMatch[0].match(/^- .+$/gm);
+        if (featureLines) {
+          features.push(...featureLines.map(f => f.replace(/^- /, '').trim()));
+        }
+      }
+
+      context.productCapabilities.push({
+        name: moduleName,
+        features: features.slice(0, 5) // Limit to top 5 features per module
+      });
+    }
+  }
+
+  // Extract Finance Operations Pain Points
+  const painPointsMatch = markdown.match(/## Finance Operations Pain Points[\s\S]*?(?=## Finance Terminology|## |\n---)/);
+  if (painPointsMatch) {
+    const painSection = painPointsMatch[0];
+    const painMatches = painSection.matchAll(/### ([^\n]+)[\s\S]*?- \*\*Pain:\*\*\s*([^\n]+)[\s\S]*?- \*\*Komplai angle:\*\*\s*([^\n]+)/g);
+    for (const match of painMatches) {
+      context.painPoints.push({
+        area: match[1].trim(),
+        pain: match[2].trim(),
+        komplaiAngle: match[3].trim()
+      });
+    }
+  }
+
+  // Extract Voice Guidelines
+  const voiceMatch = markdown.match(/## Voice Guidelines[\s\S]*?(?=## Messaging|## |\n---)/);
+  if (voiceMatch) {
+    const voice = voiceMatch[0];
+
+    // Extract Do's
+    const dosMatch = voice.match(/### Do:[\s\S]*?(?=### Don't|$)/);
+    if (dosMatch) {
+      const doLines = dosMatch[0].match(/^- .+$/gm);
+      if (doLines) {
+        context.voiceGuidelines.dos = doLines.map(d => d.replace(/^- /, '').trim());
+      }
+    }
+
+    // Extract Don'ts
+    const dontsMatch = voice.match(/### Don't:[\s\S]*?(?=## |$)/);
+    if (dontsMatch) {
+      const dontLines = dontsMatch[0].match(/^- .+$/gm);
+      if (dontLines) {
+        context.voiceGuidelines.donts = dontLines.map(d => d.replace(/^- /, '').trim());
+      }
+    }
+  }
+
+  // Extract Messaging by Audience
+  const messagingMatch = markdown.match(/## Messaging by Audience[\s\S]*?(?=## Available|## |\n---)/);
+  if (messagingMatch) {
+    const messaging = messagingMatch[0];
+
+    // Controllers
+    const controllersMatch = messaging.match(/### For Controllers[\s\S]*?\*"([^"]+)"\*/);
+    if (controllersMatch) {
+      context.messagingByAudience.controllers = {
+        focus: 'Time savings, accuracy, audit readiness, maintaining control',
+        message: controllersMatch[1]
+      };
+    }
+
+    // CFOs
+    const cfosMatch = messaging.match(/### For CFOs[\s\S]*?\*"([^"]+)"\*/);
+    if (cfosMatch) {
+      context.messagingByAudience.cfos = {
+        focus: 'Visibility, scaling without headcount, speed to close, cost efficiency',
+        message: cfosMatch[1]
+      };
+    }
+
+    // Finance Teams
+    const teamsMatch = messaging.match(/### For Finance Teams[\s\S]*?\*"([^"]+)"\*/);
+    if (teamsMatch) {
+      context.messagingByAudience.financeTeams = {
+        focus: 'Reduced tedium, AI as helper (not replacement), learning from their expertise',
+        message: teamsMatch[1]
+      };
+    }
+  }
+
+  return context;
+}
+
+/**
+ * Fetch and cache humanizer rules from GitHub
+ * @returns {string} The SKILL.md content
+ */
+function fetchHumanizerRules() {
+  const url = PropertiesService.getScriptProperties().getProperty('GITHUB_HUMANIZER_URL');
+  if (!url) {
+    throw new Error('GITHUB_HUMANIZER_URL not set in Script Properties');
+  }
+  return fetchFromGitHub(url);
+}
+
+/**
+ * Fetch and parse Komplai context from GitHub
+ * @returns {Object} Parsed context object
+ */
+function fetchKomplaiContext() {
+  const url = PropertiesService.getScriptProperties().getProperty('GITHUB_CONTEXT_URL');
+  if (!url) {
+    throw new Error('GITHUB_CONTEXT_URL not set in Script Properties');
+  }
+  const markdown = fetchFromGitHub(url);
+  return parseContextFile(markdown);
+}
+
+/**
+ * Apply humanizer rules to content using Claude API
+ * @param {string} content - The generated HTML content
+ * @param {string} humanizerRules - The SKILL.md rules content
+ * @returns {string} Humanized content
+ */
+function humanizeContent(content, humanizerRules) {
+  const apiKey = PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY');
+
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY not found in Script Properties');
+  }
+
+  const prompt = `You are a writing editor that removes signs of AI-generated text to make writing sound more natural and human.
+
+HUMANIZER RULES TO APPLY:
+${humanizerRules}
+
+CONTENT TO HUMANIZE:
+${content}
+
+YOUR TASK:
+1. Scan the content for all AI writing patterns listed in the rules above
+2. Rewrite problematic sections while preserving:
+   - The core message and meaning
+   - All HTML structure, tags, and formatting
+   - All links (internal and external)
+   - All callout boxes, statistics, and formatted sections
+   - SEO requirements (keyword placement, density)
+3. Apply these specific fixes:
+   - Replace "serves as", "stands as", "testament to" with simpler constructions
+   - Remove "delve", "tapestry", "landscape", "underscore", "foster" and other AI vocabulary
+   - Fix negative parallelisms ("not just X, but Y" patterns)
+   - Break up rule-of-three patterns
+   - Convert curly quotes to straight quotes
+   - Remove em dashes, use commas or periods instead
+   - Remove excessive hedging and filler phrases
+   - Remove promotional language ("vibrant", "stunning", "groundbreaking")
+   - Add personality and varied rhythm (short punchy sentences mixed with longer ones)
+   - Have opinions where appropriate, acknowledge complexity
+4. DO NOT:
+   - Change any URLs or links
+   - Remove or modify HTML structure
+   - Change keyword placement
+   - Remove statistics or facts
+   - Make the content shorter (maintain similar length)
+
+Return ONLY the humanized HTML content, nothing else. No explanations, no JSON wrapper, just the clean HTML.`;
+
+  const payload = {
+    model: 'claude-sonnet-4-5-20250929',
+    max_tokens: 16000,
+    messages: [{
+      role: 'user',
+      content: prompt
+    }]
+  };
+
+  const options = {
+    method: 'post',
+    contentType: 'application/json',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01'
+    },
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  };
+
+  // Retry logic for network issues (including "Address unavailable" errors)
+  const maxRetries = 3;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', options);
+      const responseData = JSON.parse(response.getContentText());
+
+      if (responseData.error) {
+        throw new Error('Claude API error in humanizer: ' + responseData.error.message);
+      }
+
+      return responseData.content[0].text;
+
+    } catch (e) {
+      const errorMsg = e.toString();
+      Logger.log(`Humanizer API attempt ${attempt}/${maxRetries} failed: ${errorMsg}`);
+
+      const isNetworkError = errorMsg.includes('Address unavailable') ||
+                             errorMsg.includes('DNS') ||
+                             errorMsg.includes('Connection') ||
+                             errorMsg.includes('Timeout');
+
+      if (attempt === maxRetries || !isNetworkError) {
+        throw new Error(`Humanizer API failed after ${attempt} attempts: ${errorMsg}`);
+      }
+
+      // Exponential backoff: 3s, 6s, 12s
+      const waitTime = 3000 * Math.pow(2, attempt - 1);
+      Logger.log(`Network error in humanizer. Waiting ${waitTime}ms before retry...`);
+      Utilities.sleep(waitTime);
+    }
+  }
+}
 
 /**
  * Creates custom menu in Google Sheets
@@ -81,6 +345,7 @@ function onOpen() {
     .addSeparator()
     .addItem('🧪 Run Comprehensive Sanity Tests', 'runSanityTests')
     .addItem('⚡ Quick Test (API Keys Only)', 'quickTest')
+    .addItem('🔗 Test GitHub Setup', 'testGitHubSetup')
     .addItem('Setup & Test Connection', 'testConnections')
     .addToUi();
 }
@@ -103,6 +368,12 @@ function installDailyTrigger() {
   // Remove any existing daily triggers first to avoid duplicates
   removeDailyTrigger();
 
+  // CRITICAL: Store the spreadsheet ID for use by the trigger
+  // Time-based triggers cannot use getActiveSpreadsheet(), so we must store the ID
+  const spreadsheetId = SpreadsheetApp.getActiveSpreadsheet().getId();
+  PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', spreadsheetId);
+  Logger.log('Stored spreadsheet ID: ' + spreadsheetId);
+
   // Create new trigger for 11 AM daily
   ScriptApp.newTrigger('scheduledDailyRun')
     .timeBased()
@@ -114,7 +385,7 @@ function installDailyTrigger() {
 
   // Show confirmation if called from UI
   try {
-    SpreadsheetApp.getUi().alert('Success', 'Daily 11 AM trigger installed!\n\nThe script will automatically run generateAllPending() at 11 AM on weekdays (Monday-Friday).', SpreadsheetApp.getUi().ButtonSet.OK);
+    SpreadsheetApp.getUi().alert('Success', 'Daily 11 AM trigger installed!\n\nThe script will automatically run generateAllPending() at 11 AM on weekdays (Monday-Friday).\n\nSpreadsheet ID saved: ' + spreadsheetId, SpreadsheetApp.getUi().ButtonSet.OK);
   } catch (e) {
     // Not running from UI context, just log
   }
@@ -153,24 +424,48 @@ function scheduledDailyRun() {
   if (dayOfWeek >= 1 && dayOfWeek <= 5) {
     Logger.log(`Running scheduled content generation on ${today.toDateString()}`);
 
+    let generated = 0;
+    let totalPending = 0;
+    const errors = [];
+
     try {
-      // Run the content generation for all pending rows
-      const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+      // IMPORTANT: Must use openById() for time-based triggers (getActiveSpreadsheet doesn't work)
+      const spreadsheetId = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
+      if (!spreadsheetId) {
+        const errMsg = 'SPREADSHEET_ID not set. Please reinstall the trigger via menu: SEO Automation > Daily Trigger > Install Daily 11 AM Trigger';
+        Logger.log('ERROR: ' + errMsg);
+        errors.push(errMsg);
+        sendTriggerNotificationEmail(0, 0, errors);
+        return;
+      }
+      const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+      const sheet = spreadsheet.getActiveSheet();
       const lastRow = sheet.getLastRow();
 
-      let generated = 0;
       for (let row = 2; row <= lastRow; row++) {
         const status = sheet.getRange(row, COLS.STATUS).getValue();
         if (status === STATUS.PENDING || status === '') {
-          generateContentForRow(sheet, row);
-          generated++;
+          totalPending++;
+          try {
+            generateContentForRow(sheet, row);
+            generated++;
+          } catch (rowError) {
+            const keyword = sheet.getRange(row, COLS.KEYWORD).getValue();
+            const errMsg = `Row ${row} (${keyword}): ${rowError.toString()}`;
+            Logger.log('Row error: ' + errMsg);
+            errors.push(errMsg);
+          }
         }
       }
 
-      Logger.log(`Scheduled run complete. Generated content for ${generated} rows.`);
+      Logger.log(`Scheduled run complete. Generated content for ${generated}/${totalPending} rows.`);
     } catch (e) {
       Logger.log(`Scheduled run error: ${e.toString()}`);
+      errors.push(e.toString());
     }
+
+    // Send notification email with run summary
+    sendTriggerNotificationEmail(generated, totalPending, errors);
   } else {
     Logger.log(`Skipping scheduled run - today is ${today.toDateString()} (weekend)`);
   }
@@ -222,6 +517,84 @@ function checkTriggerStatus() {
   }
 
   return found;
+}
+
+/**
+ * Send email notification after a scheduled trigger run
+ * @param {number} generated - Number of rows successfully generated
+ * @param {number} totalPending - Total pending rows found
+ * @param {string[]} errors - Array of error messages (if any)
+ */
+function sendTriggerNotificationEmail(generated, totalPending, errors) {
+  const notificationEmail = PropertiesService.getScriptProperties().getProperty('NOTIFICATION_EMAIL');
+  if (!notificationEmail) {
+    Logger.log('NOTIFICATION_EMAIL not set in Script Properties. Skipping email notification.');
+    return;
+  }
+
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const hasErrors = errors && errors.length > 0;
+  const statusEmoji = hasErrors ? '⚠️' : (generated > 0 ? '✅' : 'ℹ️');
+  const subject = `${statusEmoji} SEO Automation - ${generated} article${generated !== 1 ? 's' : ''} generated (${dateStr})`;
+
+  let body = `SEO Automation Daily Run Summary\n`;
+  body += `================================\n\n`;
+  body += `Date: ${dateStr}\n`;
+  body += `Time: ${today.toLocaleTimeString('en-GB')}\n\n`;
+  body += `Results:\n`;
+  body += `- Pending rows found: ${totalPending}\n`;
+  body += `- Articles generated: ${generated}\n`;
+
+  if (hasErrors) {
+    body += `\nErrors (${errors.length}):\n`;
+    errors.forEach((err, i) => {
+      body += `  ${i + 1}. ${err}\n`;
+    });
+  }
+
+  body += `\nView your spreadsheet to review the generated content.`;
+
+  let htmlBody = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #2c3e50;">SEO Automation Daily Run</h2>
+      <p style="color: #666;">${dateStr} at ${today.toLocaleTimeString('en-GB')}</p>
+      <table style="border-collapse: collapse; width: 100%; margin: 16px 0;">
+        <tr style="background: #f8f9fa;">
+          <td style="padding: 10px; border: 1px solid #dee2e6;"><strong>Pending rows found</strong></td>
+          <td style="padding: 10px; border: 1px solid #dee2e6;">${totalPending}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; border: 1px solid #dee2e6;"><strong>Articles generated</strong></td>
+          <td style="padding: 10px; border: 1px solid #dee2e6; color: ${generated > 0 ? '#27ae60' : '#666'};">${generated}</td>
+        </tr>
+      </table>`;
+
+  if (hasErrors) {
+    htmlBody += `
+      <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 12px; margin: 16px 0;">
+        <strong style="color: #856404;">Errors (${errors.length}):</strong>
+        <ul style="margin: 8px 0; padding-left: 20px;">
+          ${errors.map(err => `<li style="color: #856404;">${err}</li>`).join('')}
+        </ul>
+      </div>`;
+  }
+
+  htmlBody += `
+      <p style="color: #666; font-size: 13px; margin-top: 24px;">This is an automated notification from your SEO Automation script.</p>
+    </div>`;
+
+  try {
+    MailApp.sendEmail({
+      to: notificationEmail,
+      subject: subject,
+      body: body,
+      htmlBody: htmlBody
+    });
+    Logger.log('Trigger notification email sent to: ' + notificationEmail);
+  } catch (e) {
+    Logger.log('Failed to send notification email: ' + e.toString());
+  }
 }
 
 /**
@@ -296,7 +669,7 @@ function generateContentForRow(sheet, row) {
     }
 
     // Step 1: Fetching existing WordPress articles
-    sheet.getRange(row, COLS.STATUS).setValue('📚 Step 1/5: Fetching existing WordPress articles...');
+    sheet.getRange(row, COLS.STATUS).setValue('📚 Step 1/7: Fetching existing WordPress articles...');
     SpreadsheetApp.flush();
 
     const existingPosts = fetchAllWordPressPosts();
@@ -304,31 +677,44 @@ function generateContentForRow(sheet, row) {
     // Extract used images to avoid repetition
     const usedImages = getUsedImages(existingPosts);
 
-    // Step 2: Research and planning
-    sheet.getRange(row, COLS.STATUS).setValue('🔍 Step 2/5: Researching topic and planning content...');
+    // Step 2: Fetching context and humanizer rules from GitHub
+    sheet.getRange(row, COLS.STATUS).setValue('📥 Step 2/7: Fetching context + humanizer rules from GitHub...');
     SpreadsheetApp.flush();
 
-    const researchPlan = createContentPlan(keyword, secondaryKeywords, searchIntent, targetWordCount, existingPosts);
+    const komplaiContext = fetchKomplaiContext();
+    const humanizerRules = fetchHumanizerRules();
 
-    // Step 3: Calling Claude API to generate content
-    sheet.getRange(row, COLS.STATUS).setValue('🤖 Step 3/5: Claude AI generating content...');
+    // Step 3: Research and planning
+    sheet.getRange(row, COLS.STATUS).setValue('🔍 Step 3/7: Researching topic and planning content...');
     SpreadsheetApp.flush();
 
-    // Generate content using Claude with research plan and used images
-    const content = generateSEOContent(keyword, secondaryKeywords, searchIntent, targetWordCount, researchPlan, usedImages, sheet, row);
+    const researchPlan = createContentPlan(keyword, secondaryKeywords, searchIntent, targetWordCount, existingPosts, komplaiContext);
 
-    // Step 4: Processing response
-    sheet.getRange(row, COLS.STATUS).setValue('⚙️ Step 4/5: Processing content...');
+    // Step 4: Calling Claude API to generate content
+    sheet.getRange(row, COLS.STATUS).setValue('🤖 Step 4/7: Claude AI generating content...');
+    SpreadsheetApp.flush();
+
+    // Generate content using Claude with research plan, used images, and context
+    const content = generateSEOContent(keyword, secondaryKeywords, searchIntent, targetWordCount, researchPlan, usedImages, sheet, row, komplaiContext);
+
+    // Step 5: Humanizing content (removing AI writing patterns)
+    sheet.getRange(row, COLS.STATUS).setValue('✨ Step 5/7: Humanizing content (removing AI patterns)...');
+    SpreadsheetApp.flush();
+
+    let htmlContent = humanizeContent(content.htmlContent, humanizerRules);
+
+    // Step 6: Post-processing (links, related articles)
+    sheet.getRange(row, COLS.STATUS).setValue('🔗 Step 6/7: Post-processing (links, related articles)...');
     SpreadsheetApp.flush();
 
     // Convert [INTERNAL: ...] placeholders to actual links
-    let htmlContent = convertInternalPlaceholdersToLinks(content.htmlContent, researchPlan);
+    htmlContent = convertInternalPlaceholdersToLinks(htmlContent, researchPlan);
 
     // Add related articles carousel with links
     htmlContent = addRelatedArticles(htmlContent, existingPosts, keyword);
 
-    // Step 5: Saving to sheet
-    sheet.getRange(row, COLS.STATUS).setValue('💾 Step 5/5: Saving to sheet...');
+    // Step 7: Saving to sheet
+    sheet.getRange(row, COLS.STATUS).setValue('💾 Step 7/7: Saving to sheet...');
     SpreadsheetApp.flush();
 
     // Parse and populate results
@@ -409,8 +795,14 @@ function callAnthropicAPIWithRetry(payload, maxRetries = 3) {
 
 /**
  * Create a content plan by researching existing articles and identifying backlinking opportunities
+ * @param {string} keyword - Primary keyword
+ * @param {string} secondaryKeywords - Secondary keywords
+ * @param {string} searchIntent - Search intent type
+ * @param {number} targetWordCount - Target word count
+ * @param {Array} existingPosts - Existing WordPress posts
+ * @param {Object} komplaiContext - Parsed Komplai context from GitHub
  */
-function createContentPlan(keyword, secondaryKeywords, searchIntent, targetWordCount, existingPosts) {
+function createContentPlan(keyword, secondaryKeywords, searchIntent, targetWordCount, existingPosts, komplaiContext) {
   // Limit to top 20 posts for analysis
   const postsToAnalyze = existingPosts.slice(0, 20);
 
@@ -421,12 +813,26 @@ function createContentPlan(keyword, secondaryKeywords, searchIntent, targetWordC
 
   const secondaryKeywordsText = secondaryKeywords ? `\nSECONDARY KEYWORDS: ${secondaryKeywords}` : '';
 
+  // Build context section from parsed context
+  const contextSection = komplaiContext ? `
+COMPANY CONTEXT (use this to inform content angles):
+- What Komplai is: ${komplaiContext.companyOverview}
+- Positioning: ${komplaiContext.positioning}
+- Target ICP: ${komplaiContext.targetICP}
+
+KEY PAIN POINTS TO ADDRESS:
+${komplaiContext.painPoints?.map(p => `- ${p.area}: ${p.pain} (Komplai angle: ${p.komplaiAngle})`).join('\n') || 'N/A'}
+
+PRODUCT MODULES TO REFERENCE:
+${komplaiContext.productCapabilities?.map(m => `- ${m.name}`).join('\n') || 'N/A'}
+` : '';
+
   const prompt = `You are an SEO content strategist. Create a detailed content plan for a new blog post.
 
 TARGET KEYWORD: "${keyword}"${secondaryKeywordsText}
 SEARCH INTENT: ${searchIntent}
 TARGET WORD COUNT: ${targetWordCount} words
-
+${contextSection}
 EXISTING ARTICLES ON THE BLOG:
 ${existingPostsSummary || 'No existing articles yet.'}
 
@@ -522,8 +928,17 @@ Return ONLY valid JSON in this exact format:
 
 /**
  * Call Claude API to generate SEO-optimized content
+ * @param {string} keyword - Primary keyword
+ * @param {string} secondaryKeywords - Secondary keywords
+ * @param {string} searchIntent - Search intent type
+ * @param {number} targetWordCount - Target word count
+ * @param {Object} researchPlan - Research plan from createContentPlan
+ * @param {Set} usedImages - Set of already used image IDs
+ * @param {Sheet} sheet - Google Sheet object
+ * @param {number} row - Row number
+ * @param {Object} komplaiContext - Parsed Komplai context from GitHub
  */
-function generateSEOContent(keyword, secondaryKeywords, searchIntent, targetWordCount, researchPlan, usedImages, sheet, row) {
+function generateSEOContent(keyword, secondaryKeywords, searchIntent, targetWordCount, researchPlan, usedImages, sheet, row, komplaiContext) {
   const apiKey = PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY');
 
   if (!apiKey) {
@@ -591,18 +1006,17 @@ REQUIREMENT 2: NO CONSECUTIVE SENTENCES WITH SAME STARTING WORD
 - CHECK EVERY SENTENCE PAIR in your article before submitting
 - Common violations: "The... The...", "This... This...", "It... It...", "They... They..."
 
-REQUIREMENT 3: TRANSITION WORDS (MINIMUM 30% - AIM FOR 40%)
-- AT LEAST 30% of sentences MUST start with transition words
-- Aim for 40% to ensure you pass the 30% threshold
+REQUIREMENT 3: TRANSITION WORDS (MINIMUM 35%)
+- AT LEAST 35% of sentences MUST start with transition words
 - EVERY 2-3 SENTENCES, one must start with a transition word
 - Transition words: However, Additionally, Furthermore, Moreover, Therefore, Consequently, Meanwhile, First, Second, Next, Finally, For example, In addition, As a result, Nevertheless, Indeed, Specifically, Importantly, Similarly, Conversely, Subsequently, Accordingly, Thus, Hence, Overall, Ultimately, Currently, Previously, Initially, Notably, Certainly, Clearly
-- COUNT your transition sentences: (transition sentences ÷ total sentences) × 100 = must be ≥30%
+- COUNT your transition sentences: (transition sentences ÷ total sentences) × 100 = must be ≥35%
 
 ═══════════════════════════════════════════════════════════════════════════════
 ${researchPlanText}
 
 KOMPLAI COMPANY CONTEXT (use this to align content with our positioning):
-${buildKomplaiContextSection()}
+${buildKomplaiContextSection(komplaiContext)}
 
 IMPORTANT REQUIREMENTS:
 
@@ -631,7 +1045,7 @@ IMPORTANT REQUIREMENTS:
    - NO consecutive sentences may start with the same word - not even 2 in a row
    - Every sentence must begin with a DIFFERENT word than the sentence before it
    - After writing each sentence, check: does it start with the same word as the previous sentence? If yes, REWRITE it
-   - Use varied openers: transition words (40% of sentences), different subjects, questions, imperatives
+   - Use varied openers: transition words (at least 35% of sentences), different subjects, questions, imperatives
    - BAD: "This helps. This also reduces..." → REWRITE to: "This helps. Additionally, it reduces..."
    - BAD: "The team benefits. The process improves..." → REWRITE to: "The team benefits. Meanwhile, the process improves..."
 7. Create an engaging, SEO-friendly title (50-60 characters)
@@ -665,9 +1079,9 @@ IMPORTANT REQUIREMENTS:
      * This is NON-NEGOTIABLE: Subheadings without keyphrases FAIL Yoast SEO checks
    - CRITICAL: Add H3 subheadings every 200-300 words to break up long sections. NO section should exceed 300 words without a subheading
    - ALL paragraphs must use justified text alignment: <p style="text-align: justify;">content here</p>
-   - TRANSITION WORDS (SEE REQUIREMENT 3 ABOVE - MINIMUM 30%, AIM FOR 40%):
-     * AT LEAST 30% of ALL sentences MUST begin with transition words - AIM FOR 40%
-     * If your article has 100 sentences, at least 40 should start with transition words
+   - TRANSITION WORDS (SEE REQUIREMENT 3 ABOVE - MINIMUM 35%):
+     * AT LEAST 35% of ALL sentences MUST begin with transition words
+     * If your article has 100 sentences, at least 35 should start with transition words
      * PATTERN TO FOLLOW: Sentence 1 (any start) → Sentence 2 (transition word) → Sentence 3 (any start) → Sentence 4 (transition word)
      * USE THESE TRANSITION WORDS LIBERALLY: However, Additionally, Furthermore, Moreover, Therefore, Consequently, Meanwhile, First, Second, Next, Finally, For example, In addition, As a result, Nevertheless, Indeed, Specifically, Importantly, Similarly, Subsequently, Thus, Hence, Overall, Currently, Previously, Initially, Notably, Certainly
    - Use bullet points (HTML <ul> and <li> tags) frequently where appropriate - for lists, benefits, steps, features, comparisons, etc.
@@ -793,7 +1207,7 @@ FINAL CHECKLIST BEFORE SUBMITTING (VERIFY ALL - ARTICLE WILL BE REJECTED IF ANY 
 □ Keyword appears in 50%+ of H2 subheadings
 □ Meta description is 150-160 characters and contains the keyword in first 60 chars
 □ ZERO consecutive sentences start with the same word (every sentence starts differently from the previous one)
-□ AT LEAST 30% of sentences start with transition words (aim for 40% - count: transitions ÷ total sentences ≥ 0.30)
+□ AT LEAST 35% of sentences start with transition words (count: transitions ÷ total sentences ≥ 0.35)
 
 Return ONLY valid JSON in this exact format:
 {
@@ -830,11 +1244,53 @@ Return ONLY valid JSON in this exact format:
     SpreadsheetApp.flush();
   }
 
-  const response = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', options);
-  const responseData = JSON.parse(response.getContentText());
+  // Retry logic for network issues (including "Address unavailable" errors)
+  const maxRetries = 3;
+  let response;
+  let responseData;
 
-  if (responseData.error) {
-    throw new Error('Claude API error: ' + responseData.error.message);
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      response = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', options);
+      responseData = JSON.parse(response.getContentText());
+
+      if (responseData.error) {
+        throw new Error('Claude API error: ' + responseData.error.message);
+      }
+
+      // Success - break out of retry loop
+      break;
+
+    } catch (e) {
+      const errorMsg = e.toString();
+      Logger.log(`API call attempt ${attempt}/${maxRetries} failed: ${errorMsg}`);
+
+      // Check if this is a retryable network error
+      const isNetworkError = errorMsg.includes('Address unavailable') ||
+                             errorMsg.includes('DNS') ||
+                             errorMsg.includes('Connection') ||
+                             errorMsg.includes('Timeout');
+
+      if (attempt === maxRetries || !isNetworkError) {
+        // Update status to show error
+        if (sheet && row) {
+          sheet.getRange(row, COLS.STATUS).setValue('❌ API Error: ' + errorMsg.substring(0, 50));
+          SpreadsheetApp.flush();
+        }
+        throw new Error(`API call failed after ${attempt} attempts: ${errorMsg}`);
+      }
+
+      // Exponential backoff: 3s, 6s, 12s
+      const waitTime = 3000 * Math.pow(2, attempt - 1);
+      Logger.log(`Network error detected. Waiting ${waitTime}ms before retry...`);
+
+      if (sheet && row) {
+        sheet.getRange(row, COLS.STATUS).setValue(`🔄 Retry ${attempt}/${maxRetries}: Network issue, waiting...`);
+        SpreadsheetApp.flush();
+      }
+
+      Utilities.sleep(waitTime);
+    }
   }
 
   // Update status: parsing response
@@ -967,22 +1423,60 @@ Return ONLY valid JSON in this exact format:
 /**
  * Build the Komplai context section for the content generation prompt
  * This injects company positioning, target audience, and pain points
+ * @param {Object} context - Parsed Komplai context from GitHub
  */
-function buildKomplaiContextSection() {
+function buildKomplaiContextSection(context) {
+  if (!context) {
+    return 'Context not available - using default positioning for mid-market finance teams.';
+  }
+
+  // Format product capabilities
+  const productModules = context.productCapabilities?.map(m => {
+    const features = m.features?.slice(0, 3).join(', ') || '';
+    return `- ${m.name}${features ? `: ${features}` : ''}`;
+  }).join('\n') || 'N/A';
+
+  // Format pain points
+  const painPoints = context.painPoints?.map((p, i) =>
+    `${i + 1}. ${p.area}: ${p.pain}\n   Komplai angle: ${p.komplaiAngle}`
+  ).join('\n') || 'N/A';
+
+  // Format voice guidelines
+  const voiceDos = context.voiceGuidelines?.dos?.slice(0, 4).map(d => `- ${d}`).join('\n') || 'N/A';
+  const voiceDonts = context.voiceGuidelines?.donts?.slice(0, 4).map(d => `- ${d}`).join('\n') || 'N/A';
+
+  // Format messaging by audience
+  const audienceMessaging = Object.entries(context.messagingByAudience || {}).map(([key, value]) =>
+    `- ${key.charAt(0).toUpperCase() + key.slice(1)}: Focus on ${value.focus}\n  Sample message: "${value.message}"`
+  ).join('\n') || 'N/A';
+
   return `
 ABOUT KOMPLAI (the company publishing this content):
-${KOMPLAI_CONTEXT.companyDescription}
+${context.companyOverview || 'An automated continuous close platform for finance teams.'}
+
+CORE POSITIONING: ${context.positioning || '"One-Person Finance Team"'}
+TAGLINE: ${context.tagline || 'Super-charge finance teams with agentic automation.'}
 
 TARGET AUDIENCE:
-- ${KOMPLAI_CONTEXT.targetAudience.revenueRange}
-- ${KOMPLAI_CONTEXT.targetAudience.teamSize}
-- Key roles: ${KOMPLAI_CONTEXT.targetAudience.roles.join(', ')}
+- ${context.targetICP || 'Series A-C finance leaders at mid-market companies'}
+- Key roles: CFOs, Controllers, Finance Directors, VP Finance
+- Team size: 2-10 person finance teams
+
+PRODUCT MODULES (reference when relevant):
+${productModules}
 
 PAIN POINTS YOUR READERS EXPERIENCE (reference these naturally when relevant):
-${KOMPLAI_CONTEXT.clientPainPoints.map((p, i) => `${i + 1}. ${p}`).join('\n')}
+${painPoints}
 
-VALUE PROPOSITIONS TO WEAVE IN (when naturally relevant to the topic):
-${KOMPLAI_CONTEXT.valuePropositions.map(v => `- ${v}`).join('\n')}
+VOICE GUIDELINES:
+Do:
+${voiceDos}
+
+Don't:
+${voiceDonts}
+
+MESSAGING BY AUDIENCE:
+${audienceMessaging}
 
 NOTE: Do NOT turn this into a sales pitch. Reference these pain points and solutions only when they naturally fit the topic. The goal is authentic, helpful content that resonates with finance leaders.`;
 }
@@ -2115,4 +2609,312 @@ function quickTest() {
   }
 
   ui.alert('Quick Test Results', results.join('\n'), ui.ButtonSet.OK);
+}
+
+/**
+ * Test GitHub context file fetch
+ * Run this to verify the context file can be fetched and parsed correctly
+ */
+function testContextFetch() {
+  try {
+    const contextUrl = PropertiesService.getScriptProperties().getProperty('GITHUB_CONTEXT_URL');
+
+    if (!contextUrl) {
+      Logger.log('❌ GITHUB_CONTEXT_URL not set in Script Properties');
+      Logger.log('Set this property with the raw GitHub URL to Komplai_Context_Canonical.md');
+      return false;
+    }
+
+    Logger.log('Fetching context from: ' + contextUrl);
+    const markdown = fetchFromGitHub(contextUrl);
+
+    Logger.log('✅ Context fetched successfully');
+    Logger.log('Content length: ' + markdown.length + ' characters');
+
+    // Verify key sections exist
+    const hasCompanyOverview = markdown.includes('## Company Overview');
+    const hasProductCapabilities = markdown.includes('## Product Capabilities');
+    const hasPainPoints = markdown.includes('## Finance Operations Pain Points');
+    const hasVoiceGuidelines = markdown.includes('## Voice Guidelines');
+
+    Logger.log('Has Company Overview: ' + hasCompanyOverview);
+    Logger.log('Has Product Capabilities: ' + hasProductCapabilities);
+    Logger.log('Has Pain Points: ' + hasPainPoints);
+    Logger.log('Has Voice Guidelines: ' + hasVoiceGuidelines);
+
+    // Parse the context
+    const context = parseContextFile(markdown);
+
+    Logger.log('\n📊 Parsed Context Summary:');
+    Logger.log('- Company Overview: ' + (context.companyOverview ? context.companyOverview.substring(0, 100) + '...' : 'N/A'));
+    Logger.log('- Positioning: ' + (context.positioning || 'N/A'));
+    Logger.log('- Target ICP: ' + (context.targetICP || 'N/A'));
+    Logger.log('- Product Modules: ' + (context.productCapabilities?.length || 0));
+    Logger.log('- Pain Points: ' + (context.painPoints?.length || 0));
+    Logger.log('- Voice Do\'s: ' + (context.voiceGuidelines?.dos?.length || 0));
+    Logger.log('- Voice Don\'ts: ' + (context.voiceGuidelines?.donts?.length || 0));
+
+    if (context.productCapabilities?.length >= 7 && context.painPoints?.length >= 5) {
+      Logger.log('\n✅ Context parsing successful!');
+      return true;
+    } else {
+      Logger.log('\n⚠️ Context may be incomplete - check the source file');
+      return false;
+    }
+
+  } catch (e) {
+    Logger.log('❌ Error fetching context: ' + e.toString());
+    return false;
+  }
+}
+
+/**
+ * Test GitHub humanizer rules fetch
+ * Run this to verify the SKILL.md file can be fetched correctly
+ */
+function testHumanizerFetch() {
+  try {
+    const humanizerUrl = PropertiesService.getScriptProperties().getProperty('GITHUB_HUMANIZER_URL');
+
+    if (!humanizerUrl) {
+      Logger.log('❌ GITHUB_HUMANIZER_URL not set in Script Properties');
+      Logger.log('Set this property with the raw GitHub URL to humanizer-main/SKILL.md');
+      return false;
+    }
+
+    Logger.log('Fetching humanizer rules from: ' + humanizerUrl);
+    const rules = fetchFromGitHub(humanizerUrl);
+
+    Logger.log('✅ Humanizer rules fetched successfully');
+    Logger.log('Content length: ' + rules.length + ' characters');
+
+    // Verify key patterns exist
+    const patterns = [
+      'Undue Emphasis on Significance',
+      'Superficial Analyses',
+      'Promotional and Advertisement-like Language',
+      'AI Vocabulary',
+      'Negative Parallelisms',
+      'Rule of Three',
+      'Em Dash Overuse',
+      'Curly Quotation Marks',
+      'Generic Positive Conclusions'
+    ];
+
+    let patternsFound = 0;
+    patterns.forEach(pattern => {
+      if (rules.includes(pattern)) {
+        Logger.log('✅ Found pattern: ' + pattern);
+        patternsFound++;
+      } else {
+        Logger.log('❌ Missing pattern: ' + pattern);
+      }
+    });
+
+    Logger.log('\n📊 Summary: Found ' + patternsFound + '/' + patterns.length + ' key patterns');
+
+    if (patternsFound >= 7) {
+      Logger.log('\n✅ Humanizer rules loaded successfully!');
+      return true;
+    } else {
+      Logger.log('\n⚠️ Humanizer rules may be incomplete');
+      return false;
+    }
+
+  } catch (e) {
+    Logger.log('❌ Error fetching humanizer rules: ' + e.toString());
+    return false;
+  }
+}
+
+/**
+ * Test both GitHub fetches together
+ */
+function testGitHubSetup() {
+  const ui = SpreadsheetApp.getUi();
+  const results = [];
+
+  results.push('🔗 Testing GitHub Integration...\n');
+
+  // Test context
+  const contextUrl = PropertiesService.getScriptProperties().getProperty('GITHUB_CONTEXT_URL');
+  if (!contextUrl) {
+    results.push('❌ GITHUB_CONTEXT_URL not set');
+  } else {
+    try {
+      const context = fetchKomplaiContext();
+      results.push('✅ Context file loaded: ' + context.productCapabilities?.length + ' modules, ' + context.painPoints?.length + ' pain points');
+    } catch (e) {
+      results.push('❌ Context fetch failed: ' + e.message);
+    }
+  }
+
+  // Test humanizer
+  const humanizerUrl = PropertiesService.getScriptProperties().getProperty('GITHUB_HUMANIZER_URL');
+  if (!humanizerUrl) {
+    results.push('❌ GITHUB_HUMANIZER_URL not set');
+  } else {
+    try {
+      const rules = fetchHumanizerRules();
+      results.push('✅ Humanizer rules loaded: ' + rules.length + ' characters');
+    } catch (e) {
+      results.push('❌ Humanizer fetch failed: ' + e.message);
+    }
+  }
+
+  results.push('\n📝 Required Script Properties:');
+  results.push('GITHUB_CONTEXT_URL: Raw URL to Komplai_Context_Canonical.md');
+  results.push('GITHUB_HUMANIZER_URL: Raw URL to humanizer-main/SKILL.md');
+
+  ui.alert('GitHub Setup Test', results.join('\n'), ui.ButtonSet.OK);
+}
+
+/**
+ * Debug function to diagnose Script Properties issues
+ * Run this from the Apps Script editor to see what's actually stored
+ * Select this function from the dropdown and click Run, then View > Logs
+ */
+function debugScriptProperties() {
+  Logger.log('=== DEBUG: Script Properties ===\n');
+
+  const props = PropertiesService.getScriptProperties();
+  const allProps = props.getProperties();
+
+  Logger.log('Total number of Script Properties: ' + Object.keys(allProps).length);
+  Logger.log('Property names found: ' + Object.keys(allProps).join(', '));
+  Logger.log('\n--- Checking GitHub URLs ---\n');
+
+  // Check GITHUB_CONTEXT_URL
+  const contextUrl = props.getProperty('GITHUB_CONTEXT_URL');
+  Logger.log('GITHUB_CONTEXT_URL:');
+  Logger.log('  Raw value: "' + contextUrl + '"');
+  Logger.log('  Is null: ' + (contextUrl === null));
+  Logger.log('  Is empty string: ' + (contextUrl === ''));
+  Logger.log('  Type: ' + typeof contextUrl);
+  if (contextUrl) {
+    Logger.log('  Length: ' + contextUrl.length);
+    Logger.log('  Starts with https://raw.githubusercontent.com: ' + contextUrl.startsWith('https://raw.githubusercontent.com'));
+    Logger.log('  Has leading/trailing spaces: ' + (contextUrl !== contextUrl.trim()));
+    if (contextUrl !== contextUrl.trim()) {
+      Logger.log('  Trimmed value: "' + contextUrl.trim() + '"');
+    }
+  }
+
+  Logger.log('');
+
+  // Check GITHUB_HUMANIZER_URL
+  const humanizerUrl = props.getProperty('GITHUB_HUMANIZER_URL');
+  Logger.log('GITHUB_HUMANIZER_URL:');
+  Logger.log('  Raw value: "' + humanizerUrl + '"');
+  Logger.log('  Is null: ' + (humanizerUrl === null));
+  Logger.log('  Is empty string: ' + (humanizerUrl === ''));
+  Logger.log('  Type: ' + typeof humanizerUrl);
+  if (humanizerUrl) {
+    Logger.log('  Length: ' + humanizerUrl.length);
+    Logger.log('  Starts with https://raw.githubusercontent.com: ' + humanizerUrl.startsWith('https://raw.githubusercontent.com'));
+    Logger.log('  Has leading/trailing spaces: ' + (humanizerUrl !== humanizerUrl.trim()));
+    if (humanizerUrl !== humanizerUrl.trim()) {
+      Logger.log('  Trimmed value: "' + humanizerUrl.trim() + '"');
+    }
+  }
+
+  Logger.log('\n--- All Script Properties ---\n');
+  for (const key in allProps) {
+    const value = allProps[key];
+    // Mask sensitive values
+    if (key.includes('KEY') || key.includes('PASSWORD') || key.includes('SECRET')) {
+      Logger.log(key + ': ' + (value ? '[SET - ' + value.length + ' chars]' : '[NOT SET]'));
+    } else {
+      Logger.log(key + ': "' + value + '"');
+    }
+  }
+
+  Logger.log('\n--- Diagnosis ---\n');
+
+  if (contextUrl === null) {
+    Logger.log('⚠️  GITHUB_CONTEXT_URL is NULL - property was never saved');
+    Logger.log('   Fix: Go to File > Project Settings > Script Properties and add it');
+  } else if (contextUrl === '') {
+    Logger.log('⚠️  GITHUB_CONTEXT_URL is EMPTY STRING - property exists but has no value');
+    Logger.log('   Fix: Delete the property and re-add it with the correct URL');
+  } else if (!contextUrl.startsWith('https://raw.githubusercontent.com')) {
+    Logger.log('⚠️  GITHUB_CONTEXT_URL does not start with raw.githubusercontent.com');
+    Logger.log('   Fix: Use the raw GitHub URL format');
+  } else {
+    Logger.log('✅ GITHUB_CONTEXT_URL looks correctly formatted');
+  }
+
+  if (humanizerUrl === null) {
+    Logger.log('⚠️  GITHUB_HUMANIZER_URL is NULL - property was never saved');
+    Logger.log('   Fix: Go to File > Project Settings > Script Properties and add it');
+  } else if (humanizerUrl === '') {
+    Logger.log('⚠️  GITHUB_HUMANIZER_URL is EMPTY STRING - property exists but has no value');
+    Logger.log('   Fix: Delete the property and re-add it with the correct URL');
+  } else if (!humanizerUrl.startsWith('https://raw.githubusercontent.com')) {
+    Logger.log('⚠️  GITHUB_HUMANIZER_URL does not start with raw.githubusercontent.com');
+    Logger.log('   Fix: Use the raw GitHub URL format');
+  } else {
+    Logger.log('✅ GITHUB_HUMANIZER_URL looks correctly formatted');
+  }
+
+  Logger.log('\n=== DEBUG COMPLETE ===');
+  Logger.log('View these logs at: View > Logs (or Ctrl+Enter)');
+}
+
+/**
+ * Debug function - run this to diagnose GitHub fetch issues
+ */
+function debugGitHubFetch() {
+  Logger.log('=== DEBUG: GitHub Fetch ===');
+
+  // Check Script Properties
+  const props = PropertiesService.getScriptProperties();
+  const contextUrl = props.getProperty('GITHUB_CONTEXT_URL');
+  const humanizerUrl = props.getProperty('GITHUB_HUMANIZER_URL');
+
+  Logger.log('GITHUB_CONTEXT_URL value: "' + contextUrl + '"');
+  Logger.log('GITHUB_CONTEXT_URL type: ' + typeof contextUrl);
+  Logger.log('GITHUB_CONTEXT_URL is null: ' + (contextUrl === null));
+  Logger.log('GITHUB_CONTEXT_URL is undefined: ' + (contextUrl === undefined));
+  Logger.log('GITHUB_CONTEXT_URL length: ' + (contextUrl ? contextUrl.length : 'N/A'));
+
+  Logger.log('---');
+
+  Logger.log('GITHUB_HUMANIZER_URL value: "' + humanizerUrl + '"');
+  Logger.log('GITHUB_HUMANIZER_URL type: ' + typeof humanizerUrl);
+  Logger.log('GITHUB_HUMANIZER_URL is null: ' + (humanizerUrl === null));
+  Logger.log('GITHUB_HUMANIZER_URL is undefined: ' + (humanizerUrl === undefined));
+  Logger.log('GITHUB_HUMANIZER_URL length: ' + (humanizerUrl ? humanizerUrl.length : 'N/A'));
+
+  Logger.log('---');
+
+  // Try fetching context
+  if (contextUrl) {
+    try {
+      Logger.log('Attempting to fetch context...');
+      const contextResponse = UrlFetchApp.fetch(contextUrl, { muteHttpExceptions: true });
+      Logger.log('Context fetch status: ' + contextResponse.getResponseCode());
+      Logger.log('Context content length: ' + contextResponse.getContentText().length);
+    } catch (e) {
+      Logger.log('Context fetch ERROR: ' + e.toString());
+    }
+  } else {
+    Logger.log('Skipping context fetch - URL not set');
+  }
+
+  // Try fetching humanizer
+  if (humanizerUrl) {
+    try {
+      Logger.log('Attempting to fetch humanizer rules...');
+      const humanizerResponse = UrlFetchApp.fetch(humanizerUrl, { muteHttpExceptions: true });
+      Logger.log('Humanizer fetch status: ' + humanizerResponse.getResponseCode());
+      Logger.log('Humanizer content length: ' + humanizerResponse.getContentText().length);
+    } catch (e) {
+      Logger.log('Humanizer fetch ERROR: ' + e.toString());
+    }
+  } else {
+    Logger.log('Skipping humanizer fetch - URL not set');
+  }
+
+  Logger.log('=== DEBUG COMPLETE ===');
 }

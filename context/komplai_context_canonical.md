@@ -1,6 +1,6 @@
 # Komplai: Canonical Context Reference
 
-*Last updated: January 19, 2026*
+*Last updated: January 29, 2026*
 
 This is the single source of truth for Komplai positioning, product capabilities, competitive intelligence, and messaging. Use this document for sales enablement, marketing content, investor materials, and team alignment.
 
@@ -22,11 +22,37 @@ This is the single source of truth for Komplai positioning, product capabilities
 
 ## Product Capabilities
 
-Komplai has seven live modules, all functional today:
+Komplai has nine live modules, all functional today:
 
 ### 1. Larry (AI Assistant)
 
-Natural language interface for querying financial data and automating reporting. Users ask questions like "What is the biggest expense I have from August of this year?" and Larry returns answers with visible reasoning.
+Natural language interface for querying financial data, surfacing insights, and automating reporting. Larry serves as both a standalone product entry point and a gateway to Komplai's full close automation platform.
+
+**Four Interaction Modes:**
+
+Larry offers four structured modes, each with pre-populated suggested actions users can select:
+
+- **Analyze** — Metrics & KPIs
+  - "Our top 5 vendors by spend over the last quarter"
+  - "Total overdue exposure across all aging buckets"
+  - "Cash outflow trends compared to the previous month"
+
+- **Explain** — Deep financial insights
+  - "The primary drivers behind our current accounts payable"
+  - "Our vendor concentration risk and key dependencies"
+  - "The detailed aging profile of our outstanding receivables"
+
+- **Search** — Targeted lookups
+  - "All high-value invoices above ₹50,000 due this week"
+  - "Outstanding unpaid bills for our key marketing vendors"
+  - "The most recent invoices submitted by 'Acme Corp'"
+
+- **Identify** — Risk & anomaly detection
+  - "Customers with consistently overdue payments affecting cash flow"
+  - "Our largest upcoming liabilities due in the next 14 days"
+  - "Any anomalous or large unapproved invoices requiring attention"
+
+Users can also type freeform queries in the "Ask Larry anything" input.
 
 **Key features:**
 - Shows execution plan before answering (transparency)
@@ -40,12 +66,72 @@ Natural language interface for querying financial data and automating reporting.
 - Automates MIS report generation
 - Builds charts to visualize burn, churn, growth, cashflow, and other key metrics
 - Charts can be pinned to the dashboard and tracked on an ongoing basis
+- Follow-up action buttons after each response (e.g., "Show this data as a chart," "List vendors for overdue invoices," "Show invoices over 90 days")
+- Delegates to specialized agents (e.g., Invoice Agent) for data retrieval
 
-**Example interaction:**
+**CFO/Controller use cases:**
+- Receivables aging analysis (with aging buckets: 1-30, 31-60, 61-90, 90+ days)
+- MIS report development and generation
+- Burn rate tracking and projections
+- Churn analysis
+- Cash in bank / cash flow visibility
+- Vendor spend analysis (top vendors by period)
+- Overdue exposure across aging buckets
+
+**Interactive features:**
+- Suggested actions per mode (pre-populated queries users can select)
+- Chart visualizations (bar charts for aging buckets, trend lines for cash flow)
+- Actionable follow-up buttons after each answer
+- "Ask Larry anything" freeform input alongside structured modes
+
+**Product wedge behavior (being built):**
+- When queried data relies on books that haven't been closed, Larry surfaces a prompt indicating the information is not real-time updated
+- Larry then suggests using Komplai's close automation to bring books current
+- This creates a natural upsell motion from Larry (quick answers) → full Komplai (close automation)
+
+**Example interaction — Receivables Aging:**
+- User selects Explain mode → "the detailed aging profile of our outstanding receivables"
+- Larry delegates to Invoice Agent, then returns a Receivables Aging Summary:
+
+| Aging Bucket | Total Amount | Invoice Count |
+|--------------|-------------|---------------|
+| 1-30 Days | ₹2,78,508 | 3 |
+| 31-60 Days | ₹0 | 0 |
+| 61-90 Days | ₹2,19,143 | 3 |
+| Over 90 Days | ₹90,215 | 10 |
+
+- **Key Insights** provided:
+  - *Immediate Focus:* Nearly 47% of overdue amount is in the 1-30 day bucket — prompt follow-up recommended
+  - *Long-standing Debt:* 10 invoices over 90 days overdue — suggests dedicated collection efforts
+  - *Critical Gap:* The 61-90 day bucket holds significant amount across just 3 invoices — higher concentration of risk
+- Follow-up actions: "Show this data as a chart" | "List vendors for overdue invoices" | "Show invoices over 90 days"
+
+**Example interaction — Expense Query:**
 - User asks: "What is the biggest expense I have from August of this year?"
 - Larry shows execution plan, then answers: "The biggest expense you had in August of this year was ₹1,98,850.21 from Meta Platforms Ireland Limited."
 
-**Competitive advantage:** No competitor offers a conversational AI assistant for financial data queries and automated reporting.
+**Competitive advantage:** No competitor offers a conversational AI assistant for financial data queries and automated reporting. Larry also serves as a low-friction product entry point that naturally expands into full close automation.
+
+### Larry → Close Tracker (New: April 2026)
+
+Larry doesn't *do* the book close—but Larry *observes* it. By ingesting ERP data, Larry provides visibility into the close process:
+
+**Key capabilities:**
+- **Track Progress:** "You've reconciled 65% of transactions. 35% remain." / "12 of 25 journal entries posted for this period."
+- **Predict Timelines:** "Based on your last 6 closes, you typically finish on Day 8. You're on pace for Day 10 this month."
+- **Surface Bottlenecks:** "Bank reconciliation is your slowest step—averaging 3.2 days vs. 1.5 days for invoice validation."
+- **Upsell Trigger:** When surfacing bottlenecks, Larry shows: "Companies using Komplai's automation close in 5 days vs. your current 12-day average. Want to see how?"
+
+**Implementation notes:**
+- Tracks 3-5 predefined close phases (Invoice Validation, Bank Recon, Journal Entries, Provisions, Payroll)
+- Progress measured by ERP activity (# entries posted, # transactions reconciled)
+- Frames insights positively rather than negatively
+- Includes disclaimers that accuracy depends on ERP data quality
+- Allows manual status overrides if users track work outside ERP
+
+**Tier availability:**
+- Starter (Free): Basic progress view only
+- Scaling+: Full features including timeline predictions and bottleneck analysis
 
 ### 2. Bank/Books Reconciliation
 
@@ -157,6 +243,33 @@ Compliance calendar and task tracking for regulatory filings.
 
 **Current scope:** India-focused (TDS payments, Form PAS-6, Share Capital Audit Reports). US compliance tracking planned for future.
 
+### 8. Multi-Entity Reporting & Consolidation
+
+Consolidated financial reporting across multiple entities, subsidiaries, and business units.
+
+**Key features:**
+- Cross-entity financial consolidation with inter-company elimination
+- Unified reporting across multiple ERPs and entities
+- Multi-currency support with automatic conversion
+- Consolidated close tracking across all entities
+
+**Use case:** Finance teams managing multiple subsidiaries or business units can view consolidated financials and track close progress across all entities from a single dashboard.
+
+### 9. Human Review Layer (Maker-Checker Workflows)
+
+Structured review workflows where Komplai acts as the maker and human reviewers from the customer's team act as checkers.
+
+**Key features:**
+- Komplai prepares all entries, classifications, and reconciliations (maker role)
+- Customer's team reviews and approves work (checker role)
+- Confidence-based routing: high-confidence items go to fast-track approval, lower-confidence items get flagged for detailed review
+- Full audit trail of every maker action and checker decision
+- Escalation paths for exceptions and edge cases
+
+**Impact:** This workflow reduces headcount requirement by 65% — instead of needing staff for both preparation and review, companies only need reviewers while Komplai handles all the preparation work.
+
+**Why this matters:** Addresses the common concern that "AI can't replace human judgment" by explicitly preserving human oversight while eliminating the manual preparation work that consumes most of a finance team's time.
+
 ---
 
 ## Integrations
@@ -174,7 +287,23 @@ Compliance calendar and task tracking for regulatory filings.
 
 ---
 
-## Pricing (US Market, Annual)
+## Pricing
+
+### New Pricing Tiers (April 2026 onwards)
+
+| Tier | Price | Key Features |
+|------|-------|---------------|
+| **Starter** | Free | ERP integration, 10 Larry questions/day, basic Close Tracker (progress only), visualizations (no download), MIS automation (no download), 7-day chat history |
+| **Scaling** | $199/mo (US) / $99/mo (India) | Unlimited Larry, full Close Tracker (timeline predictions + bottleneck analysis), unlimited visualizations with download, MIS automation with templates, unlimited storage |
+| **Growth** | $499/mo (US) / $249/mo (India) | All of Scaling + partial Book Close (JV automation for AP/AR), AI-assisted bank recon (Fast Track only), weekly validation workflows, email sync for invoice ingestion |
+| **Enterprise** | Custom ($10K-$30K/year typical) | All of Growth + full Book Close automation, multi-entity consolidation, maker-checker workflows, custom integrations and SLAs |
+
+**Activation journey:**
+- Starter & Scaling: Self-serve
+- Growth: Self-serve with optional onboarding call
+- Enterprise: Sales-led
+
+### Legacy Enterprise Pricing (pre-April 2026)
 
 | Finance Team Size | Annual Price |
 |-------------------|--------------|
@@ -195,7 +324,7 @@ Compliance calendar and task tracking for regulatory filings.
 - These knowledge graphs enable users to orchestrate work more effectively over time
 - No rigid rules to configure — adapts to how your finance team already works
 
-**Competitive advantage:** 3-week full implementation vs. 5+ months for enterprise tools like BlackLine.
+**Competitive advantage:** 3 -week full implementation vs. 5+ months for enterprise tools like BlackLine.
 
 ---
 
@@ -205,6 +334,7 @@ Compliance calendar and task tracking for regulatory filings.
 
 - 10 active pilots
 - 65% automation on journal entry automation and reconciliation on day 1
+- 65% reduction in headcount requirement via maker-checker workflows (Komplai prepares, customer's team reviews)
 - 30-minute deployment and go-live
 
 ---
@@ -290,13 +420,46 @@ Unlike rule-based systems that require manual configuration, Komplai's AI agents
 
 Every AI decision includes reasoning. For reconciliation matches, users see exactly why the AI matched transactions. This addresses the "can I trust AI?" concern directly.
 
-### 4. Larry — Conversational Finance AI
+### 4. Larry — Conversational Finance AI & Product Entry Point
 
-No competitor has a natural language interface for financial data. Larry is a unique differentiator that lets finance teams query their data without building reports.
+No competitor has a natural language interface for financial data. Larry is both a unique differentiator and a strategic product wedge:
+- Four structured interaction modes (Analyze, Explain, Search, Identify) beyond freeform questions
+- Serves as a low-friction entry point — CFOs/controllers get instant value without changing workflows
+- Built-in upsell motion: when Larry's answers are stale due to unclosed books, it prompts users toward Komplai's close automation
 
 ### 5. 30-Minute Deployment
 
 Competitors take weeks to months for implementation. Komplai can be live in 30 minutes because it adapts to your existing ERP structure.
+
+---
+
+## Larry as Product Wedge
+
+Larry serves as Komplai's primary GTM entry point, enabling a land-and-expand motion:
+
+**Entry point:** CFOs/controllers adopt Larry for instant ERP answers — no workflow change required. They connect their ERP and immediately start asking questions about spend, receivables, cash flow, and vendor exposure.
+
+**Value delivered:** MIS reports, burn/churn projections, aging analysis, and cash visibility — all without building reports manually or waiting for the finance team to compile data.
+
+**Natural friction point:** When books aren't closed (e.g., reconciliation not completed, invoices not validated), Larry's answers reflect stale data. Larry surfaces this explicitly: "This data may not reflect your current position because your books for [period] haven't been closed." Larry then suggests using Komplai's close automation to bring books current.
+
+**Expansion motion:** Users who start with Larry queries naturally adopt close automation, reconciliation, and other modules to ensure Larry's answers stay accurate and real-time.
+
+**Why this works:**
+- **Low friction adoption:** Just ask questions — no process change, no training, no configuration
+- **Demonstrated value:** Users immediately see the power of instant financial answers
+- **Organic expansion:** When they hit data freshness limits, the path to close automation is natural, not a sales pitch
+- **Sticky usage:** Once Larry becomes the go-to for financial questions, switching costs are high
+
+### Sales Handoff Triggers (New: April 2026)
+
+The following conditions automatically trigger sales engagement:
+
+1. **Usage limits:** User hits the 10-question daily limit on Free tier
+2. **Feature requests:** User asks about multi-entity consolidation
+3. **Bottleneck signals:** Close Tracker shows consistent bottlenecks that automation would solve
+4. **ICP match:** User's company matches ICP signals (Series B+, 10+ finance team — via enrichment)
+5. **Explicit interest:** User explicitly asks about Book Close or automation
 
 ---
 
@@ -389,7 +552,7 @@ Komplai currently sits in the **AI-native + SMB/mid-market** quadrant, with ambi
                     SMB/Mid-market
 ```
 
-**Enterprise roadmap:** Multi-entity consolidation and other enterprise capabilities are planned as Komplai moves upmarket.
+**Enterprise capabilities (live):** Multi-entity consolidation and human review layer (maker-checker) are live today, positioning Komplai to serve upmarket customers alongside its core mid-market ICP.
 
 ---
 
@@ -427,15 +590,16 @@ Komplai currently sits in the **AI-native + SMB/mid-market** quadrant, with ambi
 
 **When Komplai wins:**
 - Prospect is smaller (<$50M revenue)
-- Doesn't need multi-entity consolidation
-- Prefers pure AI vs. human hybrid approach
+- Wants AI-native maker-checker workflows without external accountant dependency
+- Values faster implementation and lower cost
+- Needs multi-entity consolidation without enterprise pricing
 
 **When Komplai loses:**
-- Complex consolidation needs
-- Wants human accountant review layer
-- Enterprise-sized ($50M+ revenue)
+- Wants third-party human accountants as the review layer (Maximor provides their own staff)
+- Enterprise-sized ($50M+ revenue) with deeply complex consolidation
+- Prefers Maximor's managed service model over self-service
 
-**Key differentiator:** Target market — Komplai for Series A-C lean teams, Maximor for $50M+ revenue companies.
+**Key differentiator:** Komplai's maker-checker uses the customer's own team as checkers (reducing headcount by 65%), while Maximor provides external human accountants. Komplai is leaner and cheaper; Maximor is a managed service.
 
 ### vs. FloQast
 
@@ -457,7 +621,7 @@ Komplai currently sits in the **AI-native + SMB/mid-market** quadrant, with ambi
 - Needs fast implementation (BlackLine takes 5+ months)
 
 **When Komplai loses:**
-- Large enterprise with complex multi-entity requirements
+- Very large enterprise with highly complex multi-entity hierarchies (100+ entities)
 - Public company with deep SOX needs
 - SAP integration is critical
 
@@ -475,8 +639,8 @@ Komplai currently sits in the **AI-native + SMB/mid-market** quadrant, with ambi
 | Recurring expense tracking | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Amortization & deferrals | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Cash management | Partial | ❌ | ✅ | ✅ | ❌ | ❌ |
-| Multi-entity consolidation | Planned | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Human accountant layer | Planned | ❌ | ❌ | ✅ | ❌ | ❌ |
+| Multi-entity consolidation | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Human review layer (maker-checker) | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
 | Implementation time | 30 min | ~4 weeks | ~4-6 weeks | ~2 weeks | ~1.7 months | ~5 months |
 | Price range (annual) | $10-30k | Not public | $15-50k | $30k+ | $9-50k | $77-340k |
 
@@ -593,6 +757,11 @@ Focus on: Visibility, scaling without headcount, speed to close, cost efficiency
 
 *"Get real-time visibility into your close without adding headcount. Our customers see 65% automation on day one."*
 
+**Larry-specific messaging for CFOs:**
+- Larry as their personal finance analyst — instant answers without waiting for reports or team availability
+- *"Ask Larry your burn rate, cash position, or receivables aging — if the answer is stale, Komplai helps you close faster."*
+- Position Larry as the "always-on CFO assistant" that replaces ad-hoc data requests to the finance team
+
 ### For Finance Teams
 Focus on: Reduced tedium, AI as helper (not replacement), learning from their expertise
 
@@ -627,6 +796,18 @@ The following external materials are available for sales enablement and marketin
 7. **Books Reconciliation** — Match reasoning with confidence scores, "EXACT MATCH" explanations, voucher generation
 8. **Unmatched Transaction Resolution** — Link to Invoice/Chart of Account/Vendor options
 9. **Larry AI** — Natural language query with execution plan, Answer/Sources tabs
+
+#### Larry Demo Frames (30 frames) — Four Interaction Modes & Receivables Aging Walkthrough
+*Location: demo-frames/larry-frames/*
+
+**Covers:**
+1. **Receivables Aging Summary** — Detailed aging table (1-30, 31-60, 61-90, 90+ days) with key insights and actionable follow-ups
+2. **Chart Visualization** — Bar chart of outstanding receivables by aging bucket
+3. **"Ask Larry anything" Interface** — Freeform input with four mode tabs (Analyze, Explain, Search, Identify)
+4. **Analyze Mode** — Suggested actions: top vendors by spend, overdue exposure across aging buckets, cash outflow trends
+5. **Explain Mode** — Suggested actions: drivers behind AP, vendor concentration risk, detailed aging profiles
+6. **Search Mode** — Suggested actions: high-value invoices above thresholds, unpaid bills for specific vendors, recent invoices by vendor
+7. **Identify Mode** — Suggested actions: customers with consistently overdue payments, upcoming liabilities in next 14 days, unapproved invoices requiring attention
 
 #### Memory Demo (~5 min)
 *Location: External/Demos/Komplai \| Memory Demo.mov*

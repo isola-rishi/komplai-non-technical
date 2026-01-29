@@ -1,0 +1,61 @@
+export const searchInvoiceV3ApiParams = z.object({
+  vendorIds: z
+    .array(z.string())
+    .nullable()
+    .optional()
+    .describe('Filter by vendor UUIDs'),
+  vendorNames: z
+    .array(z.string())
+    .nullable()
+    .optional()
+    .describe('Filter by vendor names (case-insensitive partial match)'),
+  chartOfAccountIds: z
+    .array(z.string())
+    .nullable()
+    .optional()
+    .describe('Filter by chart of account UUIDs'),
+  chartOfAccountNames: z
+    .array(z.string())
+    .nullable()
+    .optional()
+    .describe(
+      'Filter by chart of account names (case-insensitive partial match)'
+    ),
+  dueDate: z
+    .array(z.coerce.date())
+    .length(2)
+    .nullable()
+    .optional()
+    .describe('Filter by due date range [after, before]'),
+  amount: amountFilterSchema
+    .nullable()
+    .optional()
+    .describe(
+      'Filter by amount: { operator: "lt" | "gt", amount: number }'
+    ),
+  status: z
+    .array(z.enum(InvoicePaymentStatus))
+    .nullable()
+    .optional()
+    .describe('Filter by payment status: PAID, UNPAID, PARTIALLY_PAID'),
+  invoiceDate: z
+    .array(z.coerce.date())
+    .length(2)
+    .nullable()
+    .optional()
+    .describe('Filter by invoice date range [after, before]'),
+  recurring: z
+    .boolean()
+    .optional()
+    .describe('Filter for recurring invoices only'),
+  provisions: z
+    .boolean()
+    .optional()
+    .describe(
+      'Filter for invoices with provisions/provisional entries/provisional reversals. Set to true to show only invoices that have provisions.'
+    ),
+  type: z
+    .nativeEnum(InvoiceType)
+    .optional()
+    .describe('Invoice type: PAYABLE (expenses) or RECEIVABLE (income)'),
+});

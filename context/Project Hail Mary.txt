@@ -1,0 +1,327 @@
+﻿Project Hail Mary
+==================
+
+Last Updated: January 28, 2026
+
+
+Overview
+--------
+April 1, 2026, will be 1 year since Komplai made its first public launch. The launch was impactful in the sense that it drove adoption (in the short-term), but also provided an opportunity for us to associate with a narrative. We did not play into this strongly for multiple reasons - but this launch will be managed differently. 
+
+The purpose of this launch is to show our users that Komplai: 
+1. Generates outcomes and gets things done. It is not just another observability platform. 
+   1. Any functionalities we prioritise from the below have to deliver something tangible - PDFs, charts, data tables, or work done that they or their team would otherwise have to spend time on - emailing customers, creating vouchers/entries directly into the ERP, etc. 
+2. Delivers value that the user would have to pay money to obtain, either to an external or an internal resource.
+3. Use Larry as a product wedge to create opportunities to upsell the complete Book Close module to finance teams.
+
+This document captures the project plan for the April 1, 2026, launch. The intention behind creating this document is 2 fold: (i) capture the whats of the launch, (ii) the whys, (iii) the hows, and most importantly, (iv) whether this is worth it. 
+
+
+--------------------------------------------------------------------------------
+SECTION A: FUNCTIONALITIES
+--------------------------------------------------------------------------------
+
+The following captures the immediate set of functionalities that the user would have access to when they sign up on the platform, for the first time, from April 1 onwards: 
+
+1. Integration with their ERP: 
+   1. Komplai will support integrations with Zoho, QBO, ERPNext and Xero out-of-the-box. 
+   2. Through the integration with their ERP, the user will be able to access all business finance information on the Komplai platform: 
+      1. Auto-populate existing tabs minus Book Close. Book Close tab shows with a lock icon. 
+
+2. Larry → Insights & Reports:
+   1. Using the data from the ERP (exclusively) position Larry as the finance assistant. 
+   2. Larry should be able to perform the following tasks (illustrative - we can pull the functionalities from Midday):
+      1. Cash flow and burn analysis
+      2. Growth and churn analysis - using invoice information as the reference. 
+      3. Non-negotiable (and our differentiator) → MIS report preparation on the upload of the MIS template being used by the customer. Note: If no template is provided/uploaded, we generate the MIS report in Komplai's subscribed template. 
+
+3. [NEW] Larry → Close Tracker:
+   Larry doesn't *do* the book close—but Larry *observes* it. By ingesting ERP data, Larry provides visibility into the close process:
+   
+      1. Track Progress: 
+         1. "You've reconciled 65% of transactions. 35% remain."
+         2. "12 of 25 journal entries posted for this period."
+   
+      2. Predict Timelines (Historical Trend Analysis):
+         1. "Based on your last 6 closes, you typically finish on Day 8. You're on pace for Day 10 this month."
+         2. "At current velocity, estimated close date: [Date]"
+   
+      3. Surface Bottlenecks:
+         1. "Bank reconciliation is your slowest step—averaging 3.2 days vs. 1.5 days for invoice validation."
+         2. "Accruals are taking 40% longer than last month."
+   
+      4. Upsell Trigger (The Wedge):
+         1. When surfacing bottlenecks, Larry can show: "Companies using Komplai's automation close in 5 days vs. your current 12-day average. Want to see how?"
+         2. This creates implicit sales pressure without a hard pitch.
+   
+   Implementation Notes:
+      1. Start simple: 3-5 predefined close phases (Invoice Validation, Bank Recon, Journal Entries, Provisions, Payroll)
+      2. Progress measured by ERP activity (# entries posted, # transactions reconciled)
+      3. No task assignment or workflow features in Free/Scaling tier (that's Enterprise Book Close territory)
+      4. Frame insights positively: "You're 20% behind your usual pace. Here's what's taking longer: [Bank Recon]" rather than purely negative messaging.
+   
+   Risk Mitigation:
+      1. Accuracy depends on ERP data quality. Position as "based on ERP activity" with clear disclaimers.
+      2. Allow manual status overrides if users track work outside ERP.
+
+4. Email Sync or Auto-forwarding: 
+   Note: Might not be required if we are syncing directly with an ERP, but will be required if we enable points 5 and 6. 
+   1. For users on the Google Workspace, a Gmail sync that allows the automatic push of invoices/bills. 
+      1. Note: Either manage multiple invoices in one email, or find a way to communicate that the user needs to forward invoices/bills in individual emails for Komplai to be able to pick them up. 
+   2. For non-Google Workspace users, an email forwarding functionality that does the same as 4.a. 
+
+5. JV Automation - AP v. AR:
+   1. Through the ERP sync, we autopopulate the COAs. 
+   2. Through the email sync/auto-forwarding rules, we sync invoices and map them to the sync-ed COAs on an ongoing basis. 
+   3. The Book Close page is automatically updated to create a new project every month. 
+   4. Tasks are created for the user to validate weekly → Saturday morning. As part of the validation flow, we show the users the following: 
+      1. Total income for that week
+      2. Total expenses for that week
+      3. Total outstanding on both fronts (via the bank recon)
+      4. Options to send reminder emails for AR unpaid (Optional).
+
+6. Bank Recon - Manual Upload (or ERP Sync?):
+   1. Every fortnight, the user is prompted to upload their bank statements as part of the weekly emails they receive. 
+   2. Once the bank statement is uploaded, the current workflow is followed as part of the Book Close. 
+   3. Scope for Book Close → 
+      1. JV automation
+      2. Recon entry automation 
+      3. Payroll accounting (Optional)
+      4. Sync with ERP
+
+--------------------------------------------------------------------------------
+SECTION B: USER JOURNEY
+--------------------------------------------------------------------------------
+
+This is an illustrative journey for the user: 
+1. Lands on the website → navigates to and then clicks the Sign Up button.
+2. Completes the existing sign-up flow
+3. Lands on the dashboard → prompted to integrate ERP
+4. Once the immediate data sync is completed, users receive an email → 'Larry is ready to help you with your questions'
+5. User is navigated to the dashboard, which has a 'Chat with Larry' CTA below the current chart
+6. Conversations with Larry creates assets that users can download (or pin to dashboard?)
+7. [NEW] During close periods, Larry proactively shows close progress:
+   1. "Your November close is 45% complete. Bank recon is pending."
+   2. "At current pace, you'll finish 2 days later than last month."
+8. Larry prompts the user to keep their data updated. Larry also shows a CTA to contact sales. 
+   1. Sales takes over from here and enables functionalities 4, 5, and 6 through sales qualification and feature plays.
+
+[NEW] Sales Handoff Triggers:
+1. User hits the 10-question limit on Free tier
+2. User asks about multi-entity consolidation
+3. Close Tracker shows consistent bottlenecks that automation would solve
+4. User's company matches ICP signals (Series B+, 10+ finance team - via enrichment)
+5. User explicitly asks about Book Close or automation
+
+--------------------------------------------------------------------------------
+SECTION C: PRICING
+--------------------------------------------------------------------------------
+
+We will break the offerings into 4 tiers: 
+
+1. Starter
+   1. Price → Free
+   2. Functionalities
+      1. ERP Integration
+      2. 10 questions with Larry per day (changed from absolute limit to daily limit for better UX)
+      3. Close Tracker - basic progress view only (no timeline predictions)
+      4. Visualisations & charts, but no pinning/download ability
+      5. MIS automation - but with no ability to download
+      6. 7-day chat history (changed from daily refresh to prevent activation drop-off)
+   3. Journey for activation → Self-serve
+
+2. Scaling
+   1. Price → $199/month (US) or $99/month (India)
+   2. Functionalities
+      1. ERP Integration
+      2. Unlimited questions with Larry
+      3. Close Tracker - full features including timeline predictions and bottleneck analysis
+      4. Unlimited visualisation & charts, with pinning/download ability
+      5. MIS automation → through an uploaded/Komplai-prescribed template
+      6. Unlimited storage
+   3. Journey for activation → Self-serve
+
+3. [NEW] Growth
+   1. Price → $499/month (US) or $249/month (India)
+   2. Functionalities
+      1. All of Scaling
+      2. Partial Book Close: JV Automation (AP/AR mapping)
+      3. Bank Recon - AI-assisted matching (Fast Track only)
+      4. Weekly validation workflows
+      5. Email sync for invoice ingestion
+   3. Journey for activation → Self-serve with optional onboarding call
+   4. Rationale: Bridges the 10x gap between Scaling ($199) and Enterprise ($10K+). Captures users who need automation but aren't ready for full Enterprise commitment.
+
+4. Enterprise
+   1. Price → Custom (typically $10,000 - $30,000/year based on team size)
+   2. Functionalities
+      1. All of Growth
+      2. All of Book Close (full automation suite)
+      3. Multi-entity consolidation
+      4. Maker-checker workflows
+      5. Custom integrations and SLAs
+   3. Journey for activation → Sales-led
+      1. Initiated through the Larry nudge, Close Tracker insights, or direct Sales outbound
+
+--------------------------------------------------------------------------------
+SECTION D: GO-TO-MARKET & BUDGET
+--------------------------------------------------------------------------------
+
+We will deploy Rs. 6,00,000 (~$7,200 USD) over a period of 6-months for the distribution of this project.
+
+[REVISED] Channel Allocation:
+
+1. Google AdWords (40% of budget - Rs. 2,40,000)
+   1. Bid on Komplai, Larry, Burn/Cashflow/Projections automation and MIS Automation
+   2. Avoid bidding on continuous close or book close (premium keywords, enterprise focus)
+   3. Focus on US market for paid acquisition
+
+2. LinkedIn Retargeting (20% of budget - Rs. 1,20,000)
+   1. Use website visitors to target these folks on LinkedIn
+   2. CFO/Controller/Finance Director job titles only
+
+3. [NEW] Content & SEO (30% of budget - Rs. 1,80,000)
+   1. Rationale: Paid spend stops when budget stops. Content compounds over time.
+   2. Target keywords identified in competitive intelligence:
+      - "why does month end close take so long" (low competition, high intent)
+      - "MIS automation" (our differentiator)
+      - "AI finance assistant" (Larry positioning)
+   3. Content pieces:
+      - "The Hidden Cost of Manual Month-End Close" (problem-aware)
+      - "How to Build MIS Reports Without Spreadsheets" (Larry + MIS angle)
+      - "Close Automation for Startups: What You Actually Need" (market segmentation)
+   4. Distribution via LinkedIn organic (founder posts), finance newsletters
+
+4. [NEW] Launch Event (10% of budget - Rs. 60,000)
+   1. Consider Product Hunt launch for awareness
+   2. Webinar: "Ask Larry: Live Demo of AI Finance Analysis"
+   3. Partner with 1-2 finance influencers/newsletter operators for launch day amplification
+
+
+--------------------------------------------------------------------------------
+SECTION E: PHASED LAUNCH APPROACH
+--------------------------------------------------------------------------------
+
+[NEW] Given the timeline (9 weeks from today to April 1), we recommend a phased approach to de-risk execution:
+
+PHASE 1: April 1, 2026 (Core Launch)
+   - ERP Integration (Zoho, QBO, ERPNext, Xero)
+   - Larry → Insights & Reports (cash flow, burn, MIS)
+   - Larry → Close Tracker (basic progress tracking)
+   - Starter and Scaling tiers live
+   - Self-serve onboarding
+
+PHASE 2: May 1, 2026 (Automation Launch)
+   - Email sync / auto-forwarding
+   - JV Automation (AP/AR)
+   - Bank Recon (manual upload)
+   - Growth tier goes live
+   - Close Tracker → full features (timeline predictions, bottleneck analysis)
+
+PHASE 3: June 1, 2026 (Enterprise Push)
+   - Full Book Close module positioning
+   - Multi-entity consolidation emphasis
+   - Enterprise tier active sales push
+   - Case studies from Phase 1 early adopters
+
+Rationale:
+   - Phase 1 delivers the core wedge (Larry + ERP) without automation complexity
+   - Phase 2 adds automation once core flows are proven
+   - Phase 3 leverages 2 months of user data for Enterprise sales conversations
+
+--------------------------------------------------------------------------------
+SECTION F: SUCCESS METRICS
+--------------------------------------------------------------------------------
+
+[REVISED] With more conservative conversion assumptions based on industry benchmarks:
+
+Phase 1 (April-May):
+   Metric                          Target (Original)    Target (Revised)    Notes
+   ---------------------------------------------------------------------------------
+   Website Visitors                 7,500 - 10,000       7,500 - 10,000      Unchanged
+   Free Sign-ups                    750 - 1,000          500 - 750           More conservative
+   ERP Connection Rate              70%                  50%                 Industry benchmark
+   Larry Questions Asked (total)    -                    5,000+              New: engagement metric
+   Close Tracker Adoption           -                    40% of connected    New: feature adoption
+
+Phase 2 (May-June):
+   Metric                          Target
+   ---------------------------------------------------------------------------------
+   Free → Scaling Conversions       5% (was 10%)         More realistic
+   Free → Growth Conversions        2%                   New tier
+   MRR from Scaling/Growth          $5,000 - $8,000      New metric
+
+Phase 3 (June onwards):
+   Metric                          Target
+   ---------------------------------------------------------------------------------
+   Book Close Pipeline Generated    $100,000             Unchanged
+   Enterprise Conversations         25+                  New metric
+   Scaling → Enterprise Upgrades    10%                  New metric
+
+--------------------------------------------------------------------------------
+SECTION G: RISKS & MITIGATIONS
+--------------------------------------------------------------------------------
+
+[NEW SECTION]
+
+1. ERP Data Quality Risk
+   - Issue: Larry's Close Tracker accuracy depends on ERP reflecting real-time activity
+   - Mitigation: Clear disclaimers ("based on ERP activity"), manual override options
+
+2. Free Tier Abuse
+   - Issue: Users stay on Free forever without converting
+   - Mitigation: Daily question limits, 7-day chat history, no downloads/exports
+
+3. Timeline Execution Risk
+   - Issue: 9 weeks is tight for full scope
+   - Mitigation: Phased launch approach (see Section E)
+
+4. Competitive Response
+   - Issue: Midday or competitors could copy Larry-style features
+   - Mitigation: MIS automation and Close Tracker as differentiators; first-mover advantage
+
+5. Conversion Below Expectations
+   - Issue: If 5% Free→Scaling doesn't materialize
+   - Mitigation: A/B test pricing, add growth tier as stepping stone, increase Larry value (more features in free tier to build habit)
+
+--------------------------------------------------------------------------------
+SECTION H: OPEN QUESTIONS
+--------------------------------------------------------------------------------
+
+[NEW SECTION]
+
+1. Close Tracker Phase Definitions
+   - What are the 3-5 close phases we'll track?
+   - How do we detect "completion" of each phase via ERP data?
+
+2. Growth Tier Scope
+   - Exactly which Book Close features go into Growth vs. Enterprise?
+   - Do we risk cannibalizing Enterprise pipeline?
+
+3. Mobile/Slack Distribution
+   - Should Larry be accessible via Slack/Teams for quick queries?
+   - Does this improve engagement enough to justify the build?
+
+4. Virality Mechanisms
+   - Should exported reports have "Powered by Komplai" watermarks?
+   - Referral program for free users?
+
+5. Sales Handoff Automation
+   - How do we technically detect ICP signals for sales handoff?
+   - CRM integration needed?
+
+
+--------------------------------------------------------------------------------
+APPENDIX: CHANGELOG
+--------------------------------------------------------------------------------
+
+January 28, 2026:
+   - Added Larry → Close Tracker feature (Section A.3)
+   - Added Growth pricing tier at $499/mo (Section C.3)
+   - Revised Free tier: 10 questions/day (not absolute), 7-day history (not daily refresh)
+   - Added phased launch approach (Section E)
+   - Revised GTM budget allocation to include Content/SEO (30%) and Launch Event (10%)
+   - Revised success metrics with more conservative conversion assumptions
+   - Added Sales Handoff Triggers (Section B)
+   - Added Risks & Mitigations section (Section G)
+   - Added Open Questions section (Section H)

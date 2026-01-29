@@ -1,0 +1,1671 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String             @id @default(uuid()) @db.Uuid
+  name            String
+  email           String             @unique
+  emailVerified   DateTime?
+  onboardingState UserOnboadingState @default(PENDING) @map("onboarding_state")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+  image           String?
+  accounts        Account[]
+  businesses      BusinessUser[]
+  documents       Document[]
+  sessions        Session[]
+  userDetail      UserDetail?
+
+  @@map("users")
+}
+
+model UserDetail {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @unique @map("user_id") @db.Uuid
+  contactNumber  String?  @map("contact_number")
+  userType       UserType @map("user_type")
+  analyticsToken String   @default(uuid()) @map("analytics_token")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  user           User     @relation(fields: [userId], references: [id])
+
+  @@map("user_details")
+}
+
+model Account {
+  userId                   String   @db.Uuid
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  access_token             String?
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  user                     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refresh_token_expires_in Int?
+
+  @@id([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  sessionToken String   @unique
+  userId       String   @db.Uuid
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+  @@map("verification_tokens")
+}
+
+model GeoRegion {
+  id        Int          @id @default(autoincrement())
+  name      String       @unique
+  countries GeoCountry[]
+
+  @@map("geo_regions")
+}
+
+model GeoCountry {
+  id       Int    @id @default(autoincrement())
+  name     String @unique
+  iso3Code String @unique
+  regionId Int
+
+  Region GeoRegion  @relation(fields: [regionId], references: [id])
+  States GeoState[]
+
+  @@index([regionId])
+  @@index([name])
+  @@index([iso3Code])
+  @@map("geo_countries")
+}
+
+model GeoState {
+  id        Int    @id @default(autoincrement())
+  name      String
+  countryId Int
+
+  Country GeoCountry @relation(fields: [countryId], references: [id])
+  Address Address[]
+
+  @@index([countryId])
+  @@index([name])
+  @@map("geo_states")
+}
+
+model Address {
+  id            String      @id @default(uuid())
+  streetAddress String
+  city          String?
+  postalCode    String?
+  stateId       Int?
+  state         GeoState?   @relation(fields: [stateId], references: [id])
+  type          AddressType @default(REGISTERED)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  createdById   String?
+
+  CreatedBy BusinessUser? @relation(fields: [createdById], references: [id])
+
+  businessId String?   @db.Uuid
+  Business   Business? @relation(fields: [businessId], references: [id])
+
+  vendorId String? @db.Uuid
+  Vendor   Vendor? @relation(fields: [vendorId], references: [id])
+
+  @@map("addresses")
+}
+
+enum AddressType {
+  REGISTERED
+  BILLING
+  SHIPPING
+}
+
+model IdentifierType {
+  id                String               @id @default(uuid())
+  name              String
+  /// Everytime a new code is added, update - libs/db/src/lib/indentifiers/codes.ts
+  code              String               @unique
+  formatRegex       String?
+  isRequired        Boolean              @default(false)
+  description       String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  identifiers       BusinessIdentifier[]
+  vendorIdentifiers VendorIdentifier[]
+
+  @@map("identifier_types")
+}
+
+model BusinessIdentifier {
+  id                 String            @id @default(uuid())
+  businessId         String            @db.Uuid
+  identifierTypeId   String
+  identifierValue    String
+  isActive           Boolean           @default(true)
+  businessEmployeeId String?           @db.Uuid
+  BusinessEmployee   BusinessEmployee? @relation(fields: [businessEmployeeId], references: [id])
+  business           Business          @relation(fields: [businessId], references: [id])
+  identifierType     IdentifierType    @relation(fields: [identifierTypeId], references: [id])
+
+  @@index([businessId, isActive])
+  @@index([identifierTypeId, identifierValue])
+  @@map("business_identifiers")
+}
+
+model Business {
+  id                  String              @id @default(uuid()) @db.Uuid
+  legalName           String              @map("legal_name")
+  registeredAddress   String              @map("registered_address")
+  dateOfIncorporation DateTime            @map("date_of_incorporation")
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
+  baseCurrency        String              @default("INR")
+  companyType         BusinessCompanyType @default(IN_PRIVATE) @map("company_type")
+  employeeRange       String?
+  inboundEmailAddress String?             @unique
+  inboundEmailEnabled Boolean             @default(true)
+  isPayingCustomer    Boolean             @default(false)
+
+  BusinessEmployee       BusinessEmployee[]
+  identifiers            BusinessIdentifier[]
+  users                  BusinessUser[]
+  documents              Document[]
+  GmailIntegration       GmailIntegration[]
+  invoicesAsClient       Invoice[]                @relation("invoicesAsClient")
+  Tasks                  Task[]
+  vendors                Vendor[]
+  WorkflowRun            WorkflowRun[]
+  WorkspaceUserInvites   WorkspaceUserInvite[]
+  Transaction            Transaction[]
+  ReconciliationWorkflow ReconciliationWorkflow[]
+  EmailMessage           EmailMessage[]
+  Voucher                Voucher[]
+  Address                Address[]
+
+  invoiceTemplates            InvoiceTemplate[]
+  businessOfferings           BusinessOffering[]
+  TransactionAccounts         TransactionAccounts[]
+  TaskAssignmentRule          TaskAssignmentRule[]
+  RecurringInvoiceSeries      RecurringInvoiceSeries[]
+  VoucherDelta                VoucherDelta[]
+  Tag                         Tag[]
+  PayrollVoucherTemplate      PayrollVoucherTemplate[]
+  PayrollEntryGroup           PayrollEntryGroup[]
+  AccrualConfigs              BusinessAccrualConfig[]
+  ChartOfAccounts             ChartOfAccount[]
+  IntegrationOAuthCredentials IntegrationOAuthCredentials[]
+  ErpEntityMapping            ErpEntityMapping[]
+  ChartOfAccountPreferences   ChartOfAccountPreferences[]
+  vaultResources              VaultResource[]
+  taskNotifications           TaskNotification[]
+
+  @@map("businesses")
+}
+
+model BusinessEmployee {
+  id                 String               @id @default(uuid()) @db.Uuid
+  name               String
+  type               BusinessEmployeeType
+  designation        String?
+  businessId         String               @db.Uuid
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+  business           Business             @relation(fields: [businessId], references: [id])
+  businessIdentifier BusinessIdentifier[]
+
+  @@map("business_employees")
+}
+
+model BusinessUser {
+  id                          String                        @id @default(uuid())
+  userId                      String                        @map("user_id") @db.Uuid
+  businessId                  String                        @map("business_id") @db.Uuid
+  role                        BusinessUserRole
+  createdAt                   DateTime                      @default(now()) @map("created_at")
+  updatedAt                   DateTime                      @updatedAt @map("updated_at")
+  business                    Business                      @relation(fields: [businessId], references: [id])
+  user                        User                          @relation(fields: [userId], references: [id])
+  GmailIntegration            GmailIntegration[]
+  Invoice                     Invoice[]
+  WorkflowRun                 WorkflowRun[]
+  WorkspaceUserInvite         WorkspaceUserInvite[]
+  ReconciliationWorkflow      ReconciliationWorkflow[]
+  Voucher                     Voucher[]
+  VoucherEntry                VoucherEntry[]
+  Address                     Address[]
+  AgentConversation           AgentConversation[]
+  TransactionAccounts         TransactionAccounts[]
+  TaskAssignmentSubject       TaskAssignmentSubject[]
+  Task                        Task[]
+  RecurringInvoiceSeries      RecurringInvoiceSeries[]
+  VoucherDelta                VoucherDelta[]
+  Tag                         Tag[]
+  InvoiceTag                  InvoiceTag[]
+  VaultResourceTag            VaultResourceTag[]
+  BusinessAccrualConfig       BusinessAccrualConfig[]
+  InvoiceAccrual              InvoiceAccrual[]
+  IntegrationOAuthCredentials IntegrationOAuthCredentials[]
+  vaultResources              VaultResource[]
+
+  @@unique([userId, businessId, role])
+  @@map("business_users")
+}
+
+model Document {
+  id                String               @id @default(uuid()) @db.Uuid
+  businessId        String               @map("business_id") @db.Uuid
+  uploadedById      String               @map("uploaded_by_user_id") @db.Uuid
+  fileName          String               @map("file_name")
+  filePath          String               @map("file_path")
+  mimeType          String               @map("mime_type")
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+  business          Business             @relation(fields: [businessId], references: [id])
+  uploadedBy        User                 @relation(fields: [uploadedById], references: [id])
+  accountId         String?
+  Account           TransactionAccounts? @relation(fields: [accountId], references: [id])
+  Invoice           Invoice[]
+  Transaction       Transaction[]
+  PayrollEntryGroup PayrollEntryGroup[]
+  vaultResources    VaultResource[]
+
+  @@map("documents")
+}
+
+model TaskAssignmentRule {
+  id                    String                  @id @default(uuid())
+  businessId            String                  @db.Uuid
+  taskType              String
+  Business              Business                @relation(fields: [businessId], references: [id])
+  // JSON This can be used to make things more dynamic. Store a RuleEngine DSL (like json_logic)
+  // additional_conditions 
+  TaskAssignmentSubject TaskAssignmentSubject[]
+
+  @@unique([businessId, taskType])
+  @@map("task_assignment_rules")
+}
+
+model TaskAssignmentSubject {
+  id                 String             @id @default(uuid())
+  // type "TEAM"|"USER"
+  businessUserId     String
+  assignmentRuleId   String
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+  isActive           Boolean            @default(true)
+  BusinessUser       BusinessUser       @relation(fields: [businessUserId], references: [id])
+  TaskAssignmentRule TaskAssignmentRule @relation(fields: [assignmentRuleId], references: [id])
+
+  @@index([assignmentRuleId])
+  @@index([businessUserId])
+  @@map("task_assignment_subjects")
+}
+
+model Task {
+  id                String                  @id @default(uuid()) @db.Uuid
+  type              String
+  description       String?
+  status            TaskStatus              @default(PENDING)
+  dueDate           DateTime?               @map("due_date") @db.Date
+  businessId        String                  @map("business_id") @db.Uuid
+  createdAt         DateTime                @default(now()) @map("created_at")
+  updatedAt         DateTime                @updatedAt @map("updated_at")
+  completedAt       DateTime?               @map("completed_at")
+  summary           String?
+  title             String
+  metadata          Json?
+  business          Business                @relation(fields: [businessId], references: [id])
+  assignedToId      String?
+  assignedTo        BusinessUser?           @relation(fields: [assignedToId], references: [id])
+  reconWorkflowId   String?
+  ReconWorkflow     ReconciliationWorkflow? @relation(fields: [reconWorkflowId], references: [id])
+  TaskEntity        TaskEntity[]
+  taskResources     TaskResource[]
+  taskNotifications TaskNotification[]
+
+  @@unique([type, businessId, dueDate])
+  @@index([businessId])
+  @@index([status])
+  @@map("tasks")
+}
+
+model TaskEntity {
+  id         String         @id @default(uuid())
+  taskId     String         @map("task_id") @db.Uuid
+  task       Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  entityType TaskEntityType
+  entityId   String         @map("entity_id")
+  role       TaskEntityRole
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([taskId, entityType, entityId])
+  @@index([entityType, entityId])
+  @@index([taskId])
+  @@map("task_entities")
+}
+
+model HsnCode {
+  id                String             @id @default(uuid())
+  code              String             @unique
+  description       String
+  applicableOn      HsnApplicableOn    @map("applicable_on")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  lineItems         LineItem[]
+  businessOfferings BusinessOffering[]
+
+  @@index([code])
+  @@map("hsn_codes")
+}
+
+model Invoice {
+  id                          String                        @id @default(uuid())
+  type                        InvoiceType                   @default(RECEIVABLE)
+  documentType                InvoiceDocumentType           @default(INVOICE)
+  invoiceNumber               String
+  isUploaded                  Boolean                       @default(false)
+  source                      InvoiceSource                 @default(GENERATED)
+  clientBusinessId            String                        @db.Uuid
+  vendorId                    String                        @db.Uuid
+  netAmount                   Decimal
+  totalTax                    Decimal
+  grossAmount                 Decimal
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime                      @updatedAt
+  businessUserId              String
+  documentId                  String?                       @db.Uuid
+  extractionState             ExtractionState               @default(NOT_APPLICABLE)
+  invoiceDate                 DateTime                      @default(now())
+  dueDate                     DateTime?                     @db.Date
+  metadata                    Json?
+  state                       InvoiceState                  @default(PUBLISHED) // assuming most invoices are uploads.
+  classificationScore         Float                         @default(0.0)
+  /// The chart of account assigned to this invoice.
+  ledgerType                  String?
+  groupId                     String?
+  invoiceCurrency             String                        @default("INR")
+  currencyRate                Decimal?
+  grossAmountNormalised       Decimal
+  netAmountNormalised         Decimal
+  totalTaxNormalised          Decimal
+  recurringSeriesId           String?
+  RecurringSeries             RecurringInvoiceSeries?       @relation(fields: [recurringSeriesId], references: [id])
+  InvoiceTax                  InvoiceTax[]
+  createdBy                   BusinessUser                  @relation(fields: [businessUserId], references: [id])
+  clientBusiness              Business                      @relation("invoicesAsClient", fields: [clientBusinessId], references: [id])
+  document                    Document?                     @relation(fields: [documentId], references: [id])
+  group                       InvoiceGroup?                 @relation(fields: [groupId], references: [id])
+  vendor                      Vendor                        @relation(fields: [vendorId], references: [id])
+  lineItems                   LineItem[]
+  paymentStatus               InvoicePaymentStatus          @default(UNPAID)
+  TransactionInvoice          TransactionInvoice[]
+  ReconciliationWorkflowEntry ReconciliationWorkflowEntry[]
+  deletedAt                   DateTime?
+  EmailMessage                EmailMessage?                 @relation(fields: [emailMessageId], references: [id])
+  emailMessageId              String?
+  receiptId                   String?                       @unique
+  receipt                     Invoice?                      @relation("ReceiptRelation", fields: [receiptId], references: [id])
+  receiptFor                  Invoice?                      @relation("ReceiptRelation")
+  ChartOfAccount              ChartOfAccount?               @relation(fields: [chartOfAccountId], references: [id])
+  chartOfAccountId            String?
+  generatedDescription        String?
+  invoiceTags                 InvoiceTag[]
+  InvoiceAccrual              InvoiceAccrual?
+  InvoiceClassification       InvoiceClassification?
+
+  // This is actually enforced in DB. See libs/db/src/prisma/migrations/20250707120250_fix_invoice_schema_duplication/migration.sql
+  // @@unique([clientBusinessId, vendorId, invoiceNumber, documentType, deletedAt])
+  @@index([groupId, clientBusinessId, vendorId])
+  @@map("invoices")
+}
+
+model InvoiceClassification {
+  id                    String                      @id @default(cuid())
+  invoiceId             String                      @unique
+  method                InvoiceClassificationMethod
+  score                 Float                       @default(0.0)
+  userFriendlyReasoning String
+  algoVersion           Int                         @default(1)
+  reasoning             Json
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
+  invoice               Invoice                     @relation(fields: [invoiceId], references: [id])
+
+  @@index([invoiceId])
+  @@map("invoice_classifications")
+}
+
+model Tag {
+  id          String   @id @default(uuid())
+  name        String
+  color       String? // Optional hex color for UI
+  scope       TagScope @default(BUSINESS)
+  businessId  String?  @db.Uuid
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  business          Business?          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  createdBy         BusinessUser?      @relation(fields: [createdById], references: [id])
+  invoiceTags       InvoiceTag[]
+  vaultResourceTags VaultResourceTag[]
+
+  // This is actually enforced in DB check libs/db/src/prisma/migrations/20251117091347_update_unique_index_on_tags/migration.sql
+  // @@unique([businessId, name, scope])
+  @@index([businessId])
+  @@map("tags")
+}
+
+model InvoiceTag {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  tagId       String
+  createdById String
+  createdAt   DateTime @default(now())
+
+  invoice   Invoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  tag       Tag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdBy BusinessUser @relation(fields: [createdById], references: [id])
+
+  @@unique([invoiceId, tagId])
+  @@index([invoiceId])
+  @@index([tagId])
+  @@map("invoice_tags")
+}
+
+model VaultResourceTag {
+  id          String   @id @default(uuid())
+  resourceId  String
+  tagId       String
+  createdById String
+  createdAt   DateTime @default(now())
+
+  resource  VaultResource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  tag       Tag           @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdBy BusinessUser  @relation(fields: [createdById], references: [id])
+
+  @@unique([resourceId, tagId])
+  @@index([resourceId])
+  @@index([tagId])
+  @@map("vault_resource_tags")
+}
+
+model InvoiceTax {
+  id               String           @id @default(uuid())
+  invoiceId        String
+  type             TaxType
+  customTaxType    String?
+  rate             Decimal?
+  amount           Decimal
+  amountNormalised Decimal
+  paidBy           InvoiceTaxPaidBy @default(VENDOR)
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_tax")
+}
+
+model LineItemTax {
+  id               String   @id @default(uuid())
+  lineItemId       String
+  type             TaxType
+  customTaxType    String?
+  rate             Decimal
+  amount           Decimal
+  amountNormalised Decimal
+  lineItem         LineItem @relation(fields: [lineItemId], references: [id], onDelete: Cascade)
+
+  @@map("line_item_tax")
+}
+
+model LineItem {
+  id                            String            @id @default(uuid())
+  invoiceId                     String
+  description                   String
+  ledgerType                    String?
+  chartOfAccountId              String?
+  quantity                      Decimal?
+  unitPrice                     Decimal?
+  netAmount                     Decimal
+  grossAmount                   Decimal
+  hsnCodeId                     String?
+  grossAmountNormalised         Decimal
+  netAmountNormalised           Decimal
+  unitPriceNormalised           Decimal?
+  discountAmount                Decimal?
+  discountAmountNormalised      Decimal?
+  amountAfterDiscount           Decimal?
+  amountAfterDiscountNormalised Decimal?
+  HsnCode                       HsnCode?          @relation(fields: [hsnCodeId], references: [id])
+  invoice                       Invoice           @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  lineItemTaxes                 LineItemTax[]
+  offeringId                    String?
+  offering                      BusinessOffering? @relation(fields: [offeringId], references: [id])
+  chartOfAccount                ChartOfAccount?   @relation(fields: [chartOfAccountId], references: [id])
+
+  @@map("line_item")
+}
+
+model VendorIdentifier {
+  id               String         @id @default(uuid())
+  vendorId         String         @db.Uuid
+  identifierTypeId String
+  identifierValue  String
+  isActive         Boolean        @default(true)
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+  identifierType   IdentifierType @relation(fields: [identifierTypeId], references: [id])
+  vendor           Vendor         @relation(fields: [vendorId], references: [id])
+
+  @@index([vendorId, isActive])
+  @@index([identifierTypeId, identifierValue])
+  @@map("vendor_identifiers")
+}
+
+model Vendor {
+  id                     String                   @id @default(uuid()) @db.Uuid
+  name                   String
+  email                  String?
+  contactNumber          String?                  @map("contact_number")
+  address                String?
+  vendorForId            String                   @map("business_id") @db.Uuid
+  createdAt              DateTime                 @default(now()) @map("created_at")
+  updatedAt              DateTime                 @updatedAt @map("updated_at")
+  invoices               Invoice[]
+  identifiers            VendorIdentifier[]
+  vendorFor              Business                 @relation(fields: [vendorForId], references: [id])
+  Transaction            Transaction[]
+  VoucherEntry           VoucherEntry[]
+  Address                Address[]
+  RecurringInvoiceSeries RecurringInvoiceSeries[]
+
+  @@unique([vendorForId, name])
+  @@index([vendorForId])
+  @@map("vendors")
+}
+
+model InvoiceGroup {
+  id          String         @id @default(uuid())
+  name        String         @unique
+  description String?
+  parentId    String?
+  parent      InvoiceGroup?  @relation("SubGroups", fields: [parentId], references: [id])
+  SubGroups   InvoiceGroup[] @relation("SubGroups")
+  Invoices    Invoice[]
+
+  @@map("invoice_groups")
+}
+
+model RecurringInvoiceSeries {
+  id                 String                           @id @default(uuid())
+  label              String
+  firstInvoiceDate   DateTime?
+  endDate            DateTime?
+  patternComments    String?
+  frequency          RecurringInvoiceSeriesFrequency?
+  provisionAccountId String?
+  provisionAccount   ChartOfAccount?                  @relation(fields: [provisionAccountId], references: [id])
+  businessId         String                           @db.Uuid
+  vendorId           String                           @db.Uuid
+  createdBy          String?
+  createdAt          DateTime                         @default(now())
+  updatedAt          DateTime                         @updatedAt
+
+  Business  Business      @relation(fields: [businessId], references: [id])
+  Vendor    Vendor        @relation(fields: [vendorId], references: [id])
+  CreatedBy BusinessUser? @relation(fields: [createdBy], references: [id])
+  Invoices  Invoice[]
+
+  @@map("recurring_invoice_series")
+}
+
+model GmailIntegration {
+  id                  String                 @id @default(uuid())
+  businessId          String                 @db.Uuid
+  createdBy           String
+  gmailEmail          String
+  status              GmailIntegrationStatus @default(ACTIVE)
+  lastSyncedAt        DateTime?
+  lastErrorAt         DateTime?
+  lastErrorMessage    String?
+  consecutiveFailures Int                    @default(0)
+  accessToken         String
+  refreshToken        String
+  tokenExpiresAt      DateTime
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+  /// Private if the user sets up the integration on their own account.
+  isPrivate           Boolean
+  business            Business               @relation(fields: [businessId], references: [id])
+  businessUser        BusinessUser           @relation(fields: [createdBy], references: [id])
+  EmailMessage        EmailMessage[]
+
+  @@unique([businessId, gmailEmail])
+  @@map("gmail_integrations")
+}
+
+model WorkflowRun {
+  id          String        @id @default(uuid())
+  type        WorkflowType
+  inputArgs   Json?
+  output      Json?
+  metadata    Json?
+  businessId  String        @db.Uuid
+  createdById String?
+  createdAt   DateTime      @default(now())
+  startTime   DateTime?
+  endTime     DateTime?
+  status      WorkflowState @default(PENDING)
+  /// Temporal Workflow Id
+  workflowId  String
+
+  // self referential relation
+  parentId String?
+  parent   WorkflowRun?  @relation("WorkflowHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children WorkflowRun[] @relation("WorkflowHierarchy")
+
+  userFriendlyLabel        String?
+  business                 Business                @relation(fields: [businessId], references: [id])
+  createdBy                BusinessUser?           @relation(fields: [createdById], references: [id])
+  ReconciliationWorkflow   ReconciliationWorkflow? @relation(fields: [reconciliationWorkflowId], references: [id])
+  reconciliationWorkflowId String?
+
+  @@map("workflow_runs")
+}
+
+model WorkspaceUserInvite {
+  id          String           @id @default(uuid())
+  publicToken String           @unique @default(uuid())
+  createdAt   DateTime         @default(now())
+  businessId  String           @db.Uuid
+  email       String
+  role        BusinessUserRole @default(USER)
+  accepted    Boolean          @default(false)
+  invitedBy   String
+
+  business      Business     @relation(fields: [businessId], references: [id])
+  invitedByUser BusinessUser @relation(fields: [invitedBy], references: [id])
+
+  @@map("workspace_user_invites")
+}
+
+model TransactionAccounts {
+  id               String                 @id @default(uuid())
+  type             TransactionAccountType
+  label            String
+  businessId       String                 @db.Uuid
+  createdById      String
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  lastSyncTime     DateTime?
+  currency         String
+  accountNumber    String?
+  bankName         String?
+  chartOfAccountId String?
+  ChartOfAccount   ChartOfAccount?        @relation(fields: [chartOfAccountId], references: [id])
+  Business         Business               @relation(fields: [businessId], references: [id])
+  CreatedBy        BusinessUser           @relation(fields: [createdById], references: [id])
+  Transactions     Transaction[]
+  Statements       Document[]
+  VoucherEntry     VoucherEntry[]
+
+  @@map("transaction_accounts")
+}
+
+enum TransactionAccountType {
+  BANK_ACCOUNT
+  CREDIT_CARD
+  PREPAID_WALLET
+}
+
+model Transaction {
+  id                              String                           @id @default(uuid())
+  businessId                      String                           @db.Uuid
+  business                        Business                         @relation(fields: [businessId], references: [id])
+  date                            DateTime
+  amount                          Decimal
+  description                     String?
+  vendorId                        String?                          @db.Uuid
+  vendor                          Vendor?                          @relation(fields: [vendorId], references: [id])
+  type                            TransactionType                  @default(CREDIT)
+  statementId                     String?                          @db.Uuid
+  statement                       Document?                        @relation(fields: [statementId], references: [id])
+  accountId                       String?
+  Account                         TransactionAccounts?             @relation(fields: [accountId], references: [id])
+  TransactionInvoice              TransactionInvoice[]
+  ReconciliationWorkflowEntry     ReconciliationWorkflowEntry[]
+  createdAt                       DateTime?                        @default(now())
+  updatedAt                       DateTime?                        @updatedAt
+  ReconcilationMatchJustification ReconcilationMatchJustification?
+
+  @@unique([businessId, date, amount, description])
+  @@map("transactions")
+}
+
+model TransactionInvoice {
+  id              String                  @id @default(uuid())
+  transactionId   String
+  transaction     Transaction             @relation(fields: [transactionId], references: [id])
+  invoiceId       String
+  invoice         Invoice                 @relation(fields: [invoiceId], references: [id])
+  createdAt       DateTime                @default(now())
+  reconWorkflowId String?
+  ReconWorkflow   ReconciliationWorkflow? @relation(fields: [reconWorkflowId], references: [id])
+  allocatedAmount Decimal?
+  balanceAmount   Decimal?
+
+  @@unique([transactionId, invoiceId])
+  @@map("transaction_invoices")
+}
+
+model ReconcilationMatchJustification {
+  id                    String                    @id @default(cuid())
+  transactionId         String                    @unique
+  transaction           Transaction               @relation(fields: [transactionId], references: [id])
+  method                ReconciliationMatchMethod
+  score                 Float                     @default(0.0)
+  userFriendlyReasoning String
+  algoVersion           Int                       @default(1)
+  reasoning             Json
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+
+  @@index([transactionId])
+  @@map("reconcilation_matches")
+}
+
+model ReconciliationWorkflow {
+  id                          String                        @id @default(uuid())
+  businessId                  String                        @db.Uuid
+  business                    Business                      @relation(fields: [businessId], references: [id])
+  createdBy                   String?
+  createdByUser               BusinessUser?                 @relation(fields: [createdBy], references: [id])
+  startDate                   DateTime                      @db.Date
+  endDate                     DateTime                      @db.Date
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime                      @updatedAt
+  closeDate                   DateTime?
+  stage                       ReconWorkflowStage            @default(TRANSACTION_SELECTION_PENDING)
+  ReconciliationWorkflowEntry ReconciliationWorkflowEntry[]
+  TransactionInvoice          TransactionInvoice[]
+  WorkflowRuns                WorkflowRun[]
+  Voucher                     Voucher[]
+  Tasks                       Task[]
+
+  @@map("reconciliation_workflows")
+}
+
+model ReconciliationWorkflowEntry {
+  id            String                 @id @default(uuid())
+  workflowId    String
+  workflow      ReconciliationWorkflow @relation(fields: [workflowId], references: [id])
+  transactionId String?
+  transaction   Transaction?           @relation(fields: [transactionId], references: [id])
+  invoiceId     String?
+  invoice       Invoice?               @relation(fields: [invoiceId], references: [id])
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  notes         String?
+  type          WorkflowEntryType
+  status        WorkflowEntryStatus    @default(UNMATCHED)
+
+  @@index([workflowId])
+  @@map("reconciliation_workflow_entries")
+}
+
+/// Stores email messages that have been read
+/// Either by Gmail integration or the inbound email.
+model EmailMessage {
+  id          String   @id @default(uuid())
+  messageId   String
+  receivedAt  DateTime
+  fromAddress String
+  toAddress   String
+  subject     String
+  contentKey  String?
+
+  businessId String   @db.Uuid
+  business   Business @relation(fields: [businessId], references: [id])
+
+  // Linked to a GmailIntegration?
+  gmailIntegrationId String?
+  gmailIntegration   GmailIntegration? @relation(fields: [gmailIntegrationId], references: [id])
+  invoices           Invoice[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("email_messages")
+}
+
+model ChartOfAccount {
+  id                        String                      @id @default(uuid())
+  businessId                String?                     @db.Uuid
+  name                      String
+  /// Should be parent at the parent level only.
+  usedFor                   ChartOfAccountUsedFor?
+  description               String?
+  taxType                   ChartOfAccountTaxType?
+  parentId                  String?
+  parent                    ChartOfAccount?             @relation("SubGroups", fields: [parentId], references: [id])
+  children                  ChartOfAccount[]            @relation("SubGroups")
+  Invoices                  Invoice[]
+  VoucherEntry              VoucherEntry[]
+  InvoiceTemplate           InvoiceTemplate[]
+  PayrollEntryTemplate      PayrollEntryTemplate[]
+  BusinessAccrualConfig     BusinessAccrualConfig[]
+  Business                  Business?                   @relation(fields: [businessId], references: [id])
+  LineItem                  LineItem[]
+  ChartOfAccountPreferences ChartOfAccountPreferences[]
+  RecurringInvoiceSeries    RecurringInvoiceSeries[]
+  transactionAccounts       TransactionAccounts[]
+
+  @@index([businessId])
+  @@index([businessId, usedFor])
+  @@map("chart_of_accounts")
+}
+
+model Voucher {
+  id          String      @id @default(uuid())
+  date        DateTime
+  type        VoucherType
+  description String?
+
+  entries           VoucherEntry[]
+  businessId        String                  @db.Uuid
+  business          Business                @relation(fields: [businessId], references: [id])
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  createdById       String?
+  createdBy         BusinessUser?           @relation(fields: [createdById], references: [id])
+  verificationState ExtractionState         @default(NOT_APPLICABLE)
+  source            VoucherSource
+  sourceId          String?
+  reconWorkflowId   String?
+  reconWorkflow     ReconciliationWorkflow? @relation(fields: [reconWorkflowId], references: [id])
+  VoucherDelta      VoucherDelta[]
+
+  @@map("vouchers")
+}
+
+model VoucherEntry {
+  id                   String               @id @default(uuid())
+  voucherId            String
+  voucher              Voucher              @relation(fields: [voucherId], references: [id])
+  chartOfAccountId     String?
+  chartOfAccount       ChartOfAccount?      @relation(fields: [chartOfAccountId], references: [id])
+  vendorId             String?              @db.Uuid
+  vendor               Vendor?              @relation(fields: [vendorId], references: [id])
+  transactionAccountId String?
+  transactionAccount   TransactionAccounts? @relation(fields: [transactionAccountId], references: [id])
+  credit               Decimal              @default(0)
+  debit                Decimal              @default(0)
+  internal__tags       String[]             @default([])
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  createdById          String?
+  createdBy            BusinessUser?        @relation(fields: [createdById], references: [id])
+
+  @@map("voucher_entries")
+}
+
+/// A way to represent changes to existing vouchers or creation of new ones.
+model VoucherDelta {
+  id             String                @id @default(uuid())
+  operation      VoucherDeltaOperation
+  voucherId      String?
+  systemComments String?
+  delta          Json
+  isApplied      Boolean               @default(false)
+
+  // Context
+  voucher     Voucher?      @relation(fields: [voucherId], references: [id])
+  businessId  String        @db.Uuid
+  business    Business      @relation(fields: [businessId], references: [id])
+  createdBy   String?
+  createdById BusinessUser? @relation(fields: [createdBy], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([voucherId, operation])
+  @@index([businessId, createdAt])
+  @@index([operation])
+  @@map("voucher_deltas")
+}
+
+model BusinessOffering {
+  id          String   @id @default(uuid())
+  businessId  String   @db.Uuid
+  itemCode    String // User-friendly, auto-generated, unique per business
+  name        String
+  description String
+  unitPrice   Decimal
+  hsnCodeId   String?
+  taxRate     Decimal
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  business             Business              @relation(fields: [businessId], references: [id])
+  hsnCode              HsnCode?              @relation(fields: [hsnCodeId], references: [id])
+  invoiceTemplateItems InvoiceTemplateItem[]
+  LineItem             LineItem[]
+
+  @@unique([businessId, name])
+  @@unique([businessId, itemCode]) // Ensures itemCode is unique within a business
+  @@map("business_offerings")
+}
+
+model InvoiceTemplate {
+  id               String                @id @default(uuid())
+  name             String
+  autoDueDateDays  Int?
+  chartOfAccountId String?
+  chartOfAccount   ChartOfAccount?       @relation(fields: [chartOfAccountId], references: [id])
+  businessId       String                @db.Uuid
+  business         Business              @relation(fields: [businessId], references: [id])
+  items            InvoiceTemplateItem[]
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  @@index([businessId])
+  @@map("invoice_templates")
+}
+
+model InvoiceTemplateItem {
+  id                 String  @id @default(uuid())
+  invoiceTemplateId  String
+  businessOfferingId String
+  defaultQuantity    Decimal @default(1)
+
+  invoiceTemplate  InvoiceTemplate  @relation(fields: [invoiceTemplateId], references: [id], onDelete: Cascade)
+  businessOffering BusinessOffering @relation(fields: [businessOfferingId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([invoiceTemplateId, businessOfferingId])
+  @@map("invoice_template_items")
+}
+
+model AgentConversation {
+  id                 String         @id @default(uuid())
+  title              String
+  slug               String         @unique
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  createdById        String
+  /// Legacy field from removed Voltagent - kept for backward compatibility
+  voltConversationId String?
+  CreatedBy          BusinessUser   @relation(fields: [createdById], references: [id])
+  messages           AgentMessage[]
+
+  @@index([createdById])
+  @@index([voltConversationId])
+  @@index([slug])
+  @@map("agent_conversations")
+}
+
+model AgentMessage {
+  id             String   @id @default(uuid())
+  conversationId String
+  role           String // user, assistant, system, tool
+  content        Json // Supports text and structured content (parts)
+  type           String // text, tool-call, tool-result
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  metadata       Json? // For extensibility (sub-agent info, etc.)
+
+  conversation AgentConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([type])
+  @@index([role])
+  @@map("agent_messages")
+}
+
+model FeatureFlag {
+  id               String             @id @default(cuid())
+  name             String             @unique
+  enabledForAll    Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  FeatureFlagGrant FeatureFlagGrant[]
+
+  @@map("gated_feature_flags")
+}
+
+model FeatureFlagGrant {
+  id        String   @id @default(cuid())
+  flagId    String
+  subjectId String
+  enabled   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Flag FeatureFlag @relation(fields: [flagId], references: [id])
+
+  @@unique([flagId, subjectId])
+  @@index([flagId, subjectId])
+  @@map("gated_feature_flag_grants")
+}
+
+/// Can be used as a template for mimicing voucher entries.
+model PayrollEntryTemplate {
+  id                       String                   @id @default(cuid())
+  chartOfAccountId         String
+  type                     VoucherEntryTemplateType
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+  formula                  Json                     @default("{}")
+  chartOfAccount           ChartOfAccount           @relation(fields: [chartOfAccountId], references: [id])
+  PayrollVoucherTemplate   PayrollVoucherTemplate?  @relation(fields: [payrollVoucherTemplateId], references: [id])
+  payrollVoucherTemplateId String?
+
+  @@map("payroll_entry_templates")
+}
+
+model PayrollVoucherTemplate {
+  id          String                 @id @default(cuid())
+  businessId  String                 @db.Uuid
+  description String
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  entries     PayrollEntryTemplate[]
+  business    Business               @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
+  @@map("payroll_voucher_templates")
+}
+
+model PayrollEntryGroup {
+  id               String   @id @default(cuid())
+  entryDate        DateTime @db.Date
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  businessId       String   @db.Uuid
+  sourceDocumentId String   @db.Uuid
+  business         Business @relation(fields: [businessId], references: [id])
+  sourceDocument   Document @relation(fields: [sourceDocumentId], references: [id])
+
+  @@index([businessId])
+  @@map("payroll_entry_groups")
+}
+
+model BusinessAccrualConfig {
+  id               String                         @id @default(cuid())
+  businessId       String                         @db.Uuid
+  createdAt        DateTime                       @default(now())
+  updatedAt        DateTime                       @updatedAt
+  createdBy        String?
+  chartOfAccountId String?
+  ChartOfAccount   ChartOfAccount?                @relation(fields: [chartOfAccountId], references: [id])
+  createdByUser    BusinessUser?                  @relation(fields: [createdBy], references: [id])
+  business         Business                       @relation(fields: [businessId], references: [id])
+  appliesTo        BusinessAccrualConfigAppliesTo
+
+  @@unique([businessId, appliesTo])
+  @@index([businessId, appliesTo])
+  @@map("business_accrual_configs")
+}
+
+model InvoiceAccrual {
+  id            String        @id @default(cuid())
+  invoiceId     String        @unique
+  startMonth    DateTime      @db.Date
+  endMonth      DateTime      @db.Date
+  status        AccrualStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  createdBy     String?
+  createdByUser BusinessUser? @relation(fields: [createdBy], references: [id])
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id])
+
+  @@index([invoiceId])
+  @@map("invoice_accruals")
+}
+
+model EncryptedData {
+  id String @id @default(cuid())
+
+  // The encrypted content
+  encryptedValue String @db.Text
+  encryptedKey   String @db.Text // The encrypted DEK
+
+  // KMS metadata
+  kmsProvider String // 'aws' | 'localstack'
+  kmsKeyId    String // ARN or alias
+  algorithm   String // 'AES-256-GCM'
+
+  // Versioning for key rotation
+  version Int @default(1)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Reverse relations
+  oauthRefreshToken IntegrationOAuthCredentials[] @relation("RefreshTokenEncryption")
+  oauthClientSecret IntegrationOAuthCredentials[] @relation("ClientSecretEncryption")
+
+  @@index([kmsProvider, kmsKeyId])
+  @@map("encrypted_data")
+}
+
+// OAuth-specific credentials
+model IntegrationOAuthCredentials {
+  id String @id @default(cuid())
+
+  businessId                String              @db.Uuid
+  createdBy                 String
+  provider                  IntegrationProvider
+  // Truto integration specific
+  trutoIntegrationAccountId String?
+  // Encrypted long-lived credentials
+  refreshTokenId            String?
+  clientSecretId            String?
+  // Plain text short-lived credentials
+  accessToken               String?             @db.Text
+  accessTokenExpiresAt      DateTime?
+  // OAuth metadata
+  scopes                    String[]            @default([])
+  tokenType                 String?             @default("Bearer")
+  // Additional OAuth data
+  metadata                  Json?               @default("{}")
+  // Audit trail
+  createdAt                 DateTime            @default(now())
+  updatedAt                 DateTime            @updatedAt
+  lastUsedAt                DateTime?
+  lastRefreshedAt           DateTime?
+  disabledAt                DateTime?
+  business                  Business            @relation(fields: [businessId], references: [id])
+  createdByUser             BusinessUser        @relation(fields: [createdBy], references: [id])
+  refreshToken              EncryptedData?      @relation("RefreshTokenEncryption", fields: [refreshTokenId], references: [id], onDelete: Cascade)
+  clientSecret              EncryptedData?      @relation("ClientSecretEncryption", fields: [clientSecretId], references: [id], onDelete: Cascade)
+  ErpSyncEvent              ErpSyncEvent[]
+
+  @@unique([businessId, provider])
+  @@index([businessId])
+  @@map("integration_oauth_credentials")
+}
+
+model ErpEntityMapping {
+  id                 String                @id @default(cuid())
+  businessId         String                @db.Uuid
+  internalId         String
+  internalEntityType KomplaiSyncEntityType
+  erpEntityType      ErpEntityType
+  erpEntityId        String
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  // Relations
+  integration        Business              @relation(fields: [businessId], references: [id])
+  syncEvents         ErpSyncEvent[]
+
+  @@unique([businessId, internalEntityType, internalId, erpEntityType, erpEntityId])
+  @@index([businessId, internalEntityType])
+  @@map("erp_entity_mappings")
+}
+
+model ErpSyncEvent {
+  id                          String                       @id @default(cuid())
+  oauthIntegrationId          String
+  erpEntityMappingId          String
+  eventType                   ErpSyncEventType
+  status                      ErpSyncStatus
+  direction                   ErpSyncDirection
+  payloadSentByKomplai        Json                         @default("{}")
+  errorFromErp                Json?
+  startedAt                   DateTime                     @default(now())
+  completedAt                 DateTime?
+  updatedAt                   DateTime                     @updatedAt
+  EntityMapping               ErpEntityMapping             @relation(fields: [erpEntityMappingId], references: [id])
+  IntegrationOAuthCredentials IntegrationOAuthCredentials? @relation(fields: [oauthIntegrationId], references: [id])
+
+  @@index([erpEntityMappingId])
+  @@index([status])
+  @@map("erp_sync_events")
+}
+
+model ChartOfAccountPreferences {
+  id               String          @id @default(uuid())
+  businessId       String          @db.Uuid
+  preferenceKey    String
+  chartOfAccountId String?
+  stringValue      String?
+  business         Business        @relation(fields: [businessId], references: [id])
+  chartOfAccount   ChartOfAccount? @relation(fields: [chartOfAccountId], references: [id])
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@unique([businessId, preferenceKey])
+  @@index([businessId, preferenceKey])
+  @@map("chart_of_account_preferences")
+}
+
+model VaultResource {
+  id          String            @id @default(uuid())
+  name        String
+  businessId  String            @db.Uuid
+  type        VaultResourceType
+  parentId    String?
+  documentId  String?           @db.Uuid
+  createdById String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  business  Business        @relation(fields: [businessId], references: [id])
+  createdBy BusinessUser?   @relation(fields: [createdById], references: [id])
+  document  Document?       @relation(fields: [documentId], references: [id])
+  parent    VaultResource?  @relation("ResourceHierarchy", fields: [parentId], references: [id])
+  children  VaultResource[] @relation("ResourceHierarchy")
+
+  resourceTags  VaultResourceTag[]
+  taskResources TaskResource[]
+
+  // This is actually enforced in DB check libs/db/src/prisma/migrations/20251117085535_add_unique_index_for_vault_resource/migration.sql
+  // @@unique([type, name, parentId, businessId])
+  @@index([businessId])
+  @@map("vault_resources")
+}
+
+model TaskResource {
+  id         String   @id @default(uuid())
+  taskId     String   @db.Uuid
+  resourceId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  task     Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  resource VaultResource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, resourceId])
+  @@index([taskId])
+  @@map("task_resources")
+}
+
+model TaskNotification {
+  id         String                 @id @default(uuid())
+  taskId     String                 @db.Uuid
+  businessId String                 @db.Uuid
+  status     TaskNotificationStatus @default(PENDING)
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @updatedAt
+  sentAt     DateTime?
+  task       Task                   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  business   Business               @relation(fields: [businessId], references: [id])
+
+  @@index([status, createdAt])
+  @@map("task_notifications")
+}
+
+enum TaskNotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+enum VaultResourceType {
+  FILE
+  FOLDER
+}
+
+enum TagScope {
+  BUSINESS
+  GLOBAL
+}
+
+enum IntegrationProvider {
+  ZOHO_BOOKS
+  TRUTO_ERP_NEXT
+}
+
+enum KomplaiSyncEntityType {
+  INVOICE
+  TRANSACTION
+  VOUCHER
+  CHART_OF_ACCOUNT
+  BANK_ACCOUNT
+  VENDOR
+}
+
+enum ErpEntityType {
+  ZOHO_INVOICE
+  ZOHO_BILL
+  ZOHO_RECURRING_BILL
+  ZOHO_BANK_ACCOUNTS
+  ZOHO_CHART_OF_ACCOUNTS
+  ZOHO_CONTACTS
+  ZOHO_BANK_TRANSACTIONS
+  ZOHO_COA_TRANSACTIONS // Vouchers 
+  ZOHO_JOURNALS // Vouchers created from provisions,accrual, payroll etc.
+  ERPNEXT_CHART_OF_ACCOUNTS
+  ERPNEXT_INVOICE
+  ERPNEXT_BILL
+  ERPNEXT_JOURNALS
+  ERPNEXT_BANK_ACCOUNT
+  ERPNEXT_PAYMENTS
+  ERPNEXT_BANK_TRANSACTIONS
+}
+
+enum ErpSyncDirection {
+  FROM_ERP
+  TO_ERP
+}
+
+enum ErpSyncStatus {
+  SUCCESS // @deprecated - Use CREATED or UPDATED instead
+  CREATED
+  UPDATED
+  FAILED
+  SKIPPED
+  PENDING
+}
+
+enum ErpSyncEventType {
+  READ_ATTEMPT
+  WRITE_ATTEMPT
+}
+
+enum BusinessAccrualConfigAppliesTo {
+  RECEIVABLE
+  PAYABLE
+  BOTH
+}
+
+enum AccrualStatus {
+  PENDING // Accrual scheduled but not started
+  IN_PROGRESS //  Accrual Entries being created
+  COMPLETED // All monthly entries created
+  CANCELLED // User cancelled the accrual
+}
+
+enum VoucherEntryTemplateType {
+  DEBIT
+  CREDIT
+}
+
+enum RecurringInvoiceSeriesFrequency {
+  MONTHLY
+  QUARTERLY
+}
+
+enum TaskEntityRole {
+  PRIMARY
+  OTHER
+}
+
+enum TaskEntityType {
+  INVOICE
+  VOUCHER
+  TRANSACTION
+  RECON_ENTRY
+  VOUCHER_DELTA
+}
+
+enum VoucherSource {
+  INVOICE
+  TRANSACTION
+  TRANSACTION_INVOICE
+  PAYROLL_ENTRY
+  UNLINKED
+  ACCRUAL_REVERSAL
+  PREPAID_ACCRUAL
+  PROVISIONAL_EXPENSES
+  PROVISIONAL_REVERSAL
+}
+
+enum InvoiceTaxPaidBy {
+  VENDOR
+  CLIENT
+}
+
+enum VoucherType {
+  JOURNAL
+  PURCHASE
+  SALES
+  PAYMENT
+  RECEIPT
+  CREDIT_NOTE
+  DEBIT_NOTE
+}
+
+enum ChartOfAccountUsedFor {
+  INCOME
+  EXPENSE
+  INCOME_AND_EXPENSE
+}
+
+enum ReconWorkflowStage {
+  TRANSACTION_SELECTION_PENDING
+  SUSPENSE_RESOLUTION_PENDING
+  DATA_VERIFICATION_PENDING
+  COMPLETED
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum UserType {
+  END_USER
+  INTERNAL
+}
+
+enum BusinessUserRole {
+  OWNER
+  ACCOUNTANT
+  USER
+  CA
+  CS
+}
+
+enum BusinessCompanyType {
+  IN_PRIVATE
+  IN_PUBLIC
+  IN_OPC
+  IN_LLP
+  IN_SOLE_PROPRIETORSHIP
+}
+
+enum UserOnboadingState {
+  PENDING
+  COMPLETE
+  USER_INFO
+  BUSINESS_INFO
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETE
+  OVERDUE
+  BLOCKED
+  NOT_APPLICABLE
+}
+
+enum ExtractionState {
+  NOT_APPLICABLE
+  NOT_VERIFIED
+  VERIFIED
+  VERIFIED_EDITED
+}
+
+enum HsnApplicableOn {
+  GOODS
+  SERVICE
+}
+
+enum InvoiceType {
+  PAYABLE
+  RECEIVABLE
+}
+
+enum InvoiceDocumentType {
+  INVOICE
+  BILL
+  RECEIPT
+}
+
+enum GmailIntegrationStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum BusinessEmployeeType {
+  DIRECTOR
+}
+
+enum ChartOfAccountTaxType {
+  TDS
+  GST
+}
+
+enum TaxType {
+  SGST
+  IGST
+  CGST
+  TDS
+  TDS_192A
+  TDS_193
+  TDS_194
+  TDS_194A_Bank
+  TDS_194A_Bank_Senior
+  TDS_194A_Others
+  TDS_194B
+  TDS_194BB
+  TDS_194C_Individual_Single
+  TDS_194C_Individual_Aggregate
+  TDS_194C_Others_Single
+  TDS_194C_Others_Aggregate
+  TDS_194D_Domestic
+  TDS_194D_Others
+  TDS_194DA
+  TDS_194EE
+  TDS_194F
+  TDS_194G
+  TDS_194H
+  TDS_194I_Property
+  TDS_194I_Machinery
+  TDS_194IA
+  TDS_194IB
+  TDS_194IC
+  TDS_194J_Professional
+  TDS_194J_Technical
+  TDS_194J_Royalty
+  TDS_194K
+  TDS_194LA
+  TDS_194LB
+  TDS_194LBA
+  TDS_194LD
+  TDS_194M
+  TDS_194N_WITH_ITR
+  TDS_194N_WITHOUT_ITR
+  TDS_194O
+  TDS_194Q
+  TDS_194S
+  OTHER
+}
+
+/// These should ideally be a subset of temporal workflows
+/// apps/temporal/src/workflows.ts
+enum WorkflowType {
+  gmailScanWorkflow
+  saveFileToInvoice
+  saveDocumentToInvoice
+  parseStatement
+  reconcileInvoicesAndTransactions
+  recurringInvoiceWorkspaceBackfill
+  syncZohoErp
+  syncTrutoErp
+  runReconForWorkflow
+  zohoDailySync
+  processTransaction
+  vaultFolderExportWorkflow
+}
+
+enum WorkflowState {
+  PENDING
+  IN_PROGRESS
+  FAILED
+  COMPLETED
+}
+
+enum InvoicePaymentStatus {
+  UNPAID
+  PAID
+  PARTIALLY_PAID
+}
+
+enum WorkflowEntryType {
+  INVOICE
+  TRANSACTION
+}
+
+enum WorkflowEntryStatus {
+  UNMATCHED
+  MATCHED_PENDING_VERIFICATION
+  MATCH_INVOICE
+  MATCH_TRANSACTION_NO_INVOICE
+  VOUCHER_CREATED
+}
+
+enum InvoiceState {
+  DRAFT
+  PUBLISHED
+}
+
+enum VoucherDeltaOperation {
+  CREATE_VOUCHER
+  EDIT_VOUCHER
+  REMOVE_ENTRY
+  ADD_ENTRY
+}
+
+enum InvoiceClassificationMethod {
+  MEMORY_LOOKUP
+  AI_CLASSIFICATION
+}
+
+enum ReconciliationMatchMethod {
+  EXACT_MATCH
+  EXACT_MATCH_WITH_TDS
+  AI_MATCH
+  MEMORY_LOOKUP
+  BALANCE_ALLOCATION
+  NO_MATCHES
+}
+
+enum InvoiceSource {
+  UPLOADED
+  GENERATED
+  ERP
+}
