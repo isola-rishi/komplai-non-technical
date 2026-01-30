@@ -43,6 +43,7 @@ const STATUS = {
 // Set these in Script Properties: File > Project Settings > Script Properties
 // GITHUB_CONTEXT_URL: Raw URL to Komplai_Context_Canonical.md
 // GITHUB_HUMANIZER_URL: Raw URL to humanizer-main/SKILL.md
+// GITHUB_SEO_RULES_URL: Raw URL to SEO-WRITING-RULES.md
 
 /**
  * Fetch content from a GitHub raw URL
@@ -51,7 +52,7 @@ const STATUS = {
  */
 function fetchFromGitHub(url) {
   if (!url || url.trim() === '') {
-    throw new Error('GitHub URL is empty. Please set GITHUB_CONTEXT_URL and GITHUB_HUMANIZER_URL in Script Properties.\n\nGo to: File > Project Settings > Script Properties\n\nAdd these two properties:\n- GITHUB_CONTEXT_URL: https://raw.githubusercontent.com/YOUR_USER/komplai-non-technical/main/Komplai_Context_Canonical.md\n- GITHUB_HUMANIZER_URL: https://raw.githubusercontent.com/YOUR_USER/komplai-non-technical/main/humanizer-main/SKILL.md');
+    throw new Error('GitHub URL is empty. Please set GITHUB_CONTEXT_URL, GITHUB_HUMANIZER_URL, and GITHUB_SEO_RULES_URL in Script Properties.\n\nGo to: File > Project Settings > Script Properties\n\nAdd these properties:\n- GITHUB_CONTEXT_URL: https://raw.githubusercontent.com/YOUR_USER/komplai-non-technical/main/Komplai_Context_Canonical.md\n- GITHUB_HUMANIZER_URL: https://raw.githubusercontent.com/YOUR_USER/komplai-non-technical/main/humanizer-main/SKILL.md\n- GITHUB_SEO_RULES_URL: https://raw.githubusercontent.com/YOUR_USER/komplai-non-technical/main/seo-automation/SEO-WRITING-RULES.md');
   }
   const response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
   if (response.getResponseCode() !== 200) {
@@ -204,6 +205,19 @@ function fetchHumanizerRules() {
   const url = PropertiesService.getScriptProperties().getProperty('GITHUB_HUMANIZER_URL');
   if (!url) {
     throw new Error('GITHUB_HUMANIZER_URL not set in Script Properties');
+  }
+  return fetchFromGitHub(url);
+}
+
+/**
+ * Fetch SEO writing rules from GitHub
+ * @returns {string} The SEO-WRITING-RULES.md content
+ */
+function fetchSEOWritingRules() {
+  const url = PropertiesService.getScriptProperties().getProperty('GITHUB_SEO_RULES_URL');
+  if (!url) {
+    Logger.log('GITHUB_SEO_RULES_URL not set - using embedded rules only');
+    return null;  // Return null to fall back to embedded rules
   }
   return fetchFromGitHub(url);
 }
@@ -677,12 +691,13 @@ function generateContentForRow(sheet, row) {
     // Extract used images to avoid repetition
     const usedImages = getUsedImages(existingPosts);
 
-    // Step 2: Fetching context and humanizer rules from GitHub
-    sheet.getRange(row, COLS.STATUS).setValue('📥 Step 2/7: Fetching context + humanizer rules from GitHub...');
+    // Step 2: Fetching context, humanizer rules, and SEO rules from GitHub
+    sheet.getRange(row, COLS.STATUS).setValue('📥 Step 2/7: Fetching context + rules from GitHub...');
     SpreadsheetApp.flush();
 
     const komplaiContext = fetchKomplaiContext();
     const humanizerRules = fetchHumanizerRules();
+    const seoWritingRules = fetchSEOWritingRules();
 
     // Step 3: Research and planning
     sheet.getRange(row, COLS.STATUS).setValue('🔍 Step 3/7: Researching topic and planning content...');
@@ -694,8 +709,8 @@ function generateContentForRow(sheet, row) {
     sheet.getRange(row, COLS.STATUS).setValue('🤖 Step 4/7: Claude AI generating content...');
     SpreadsheetApp.flush();
 
-    // Generate content using Claude with research plan, used images, and context
-    const content = generateSEOContent(keyword, secondaryKeywords, searchIntent, targetWordCount, researchPlan, usedImages, sheet, row, komplaiContext);
+    // Generate content using Claude with research plan, used images, context, and SEO rules
+    const content = generateSEOContent(keyword, secondaryKeywords, searchIntent, targetWordCount, researchPlan, usedImages, sheet, row, komplaiContext, seoWritingRules);
 
     // Step 5: Humanizing content (removing AI writing patterns)
     sheet.getRange(row, COLS.STATUS).setValue('✨ Step 5/7: Humanizing content (removing AI patterns)...');
@@ -937,8 +952,9 @@ Return ONLY valid JSON in this exact format:
  * @param {Sheet} sheet - Google Sheet object
  * @param {number} row - Row number
  * @param {Object} komplaiContext - Parsed Komplai context from GitHub
+ * @param {string|null} seoWritingRules - SEO writing rules from GitHub (optional)
  */
-function generateSEOContent(keyword, secondaryKeywords, searchIntent, targetWordCount, researchPlan, usedImages, sheet, row, komplaiContext) {
+function generateSEOContent(keyword, secondaryKeywords, searchIntent, targetWordCount, researchPlan, usedImages, sheet, row, komplaiContext, seoWritingRules) {
   const apiKey = PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY');
 
   if (!apiKey) {
@@ -979,6 +995,22 @@ ${researchPlan.suggestedH2s?.map((h2, idx) => `${idx + 1}. ${h2}`).join('\n') ||
 `;
   }
 
+  // Build SEO writing rules section if rules are provided
+  let seoRulesSection = '';
+  if (seoWritingRules) {
+    seoRulesSection = `
+═══════════════════════════════════════════════════════════════════════════════
+SEO WRITING RULES REFERENCE GUIDE (STUDY THESE EXAMPLES CAREFULLY)
+═══════════════════════════════════════════════════════════════════════════════
+
+${seoWritingRules}
+
+═══════════════════════════════════════════════════════════════════════════════
+END OF SEO WRITING RULES - APPLY THESE THROUGHOUT YOUR CONTENT
+═══════════════════════════════════════════════════════════════════════════════
+`;
+  }
+
   const prompt = `You are an SEO content writer. Generate a comprehensive, SEO-optimized blog post with the following specifications. Today's date is ${new Date().toISOString().split('T')[0]} and the current year is ${currentYear}.
 
 TARGET KEYWORD: "${keyword}"
@@ -1013,6 +1045,7 @@ REQUIREMENT 3: TRANSITION WORDS (MINIMUM 35%)
 - COUNT your transition sentences: (transition sentences ÷ total sentences) × 100 = must be ≥35%
 
 ═══════════════════════════════════════════════════════════════════════════════
+${seoRulesSection}
 ${researchPlanText}
 
 KOMPLAI COMPANY CONTEXT (use this to align content with our positioning):
@@ -2728,6 +2761,71 @@ function testHumanizerFetch() {
 }
 
 /**
+ * Test GitHub SEO writing rules fetch
+ * Run this to verify the SEO-WRITING-RULES.md file can be fetched correctly
+ */
+function testSEOWritingRulesFetch() {
+  Logger.log('=== Testing SEO Writing Rules Fetch ===\n');
+
+  try {
+    const seoRulesUrl = PropertiesService.getScriptProperties().getProperty('GITHUB_SEO_RULES_URL');
+
+    if (!seoRulesUrl) {
+      Logger.log('⚠️ GITHUB_SEO_RULES_URL not set in Script Properties');
+      Logger.log('Set this property with the raw GitHub URL to SEO-WRITING-RULES.md');
+      Logger.log('The script will use embedded rules only.');
+      return false;
+    }
+
+    Logger.log('Fetching SEO writing rules from: ' + seoRulesUrl);
+    const rules = fetchFromGitHub(seoRulesUrl);
+
+    Logger.log('✅ SEO writing rules fetched successfully');
+    Logger.log('Content length: ' + rules.length + ' characters');
+    Logger.log('\n--- First 500 characters ---\n');
+    Logger.log(rules.substring(0, 500));
+
+    // Check for key patterns
+    Logger.log('\n--- Checking for key patterns ---\n');
+    const patterns = [
+      'ZERO Consecutive Sentences',
+      'Minimum 35% Transition',
+      'TRANSITION WORDS BY CATEGORY',
+      'BEFORE/AFTER EXAMPLES',
+      'SELF-CHECK FORMULA',
+      'Additionally',
+      'Furthermore',
+      'However',
+      'Therefore'
+    ];
+
+    let patternsFound = 0;
+    patterns.forEach(pattern => {
+      if (rules.includes(pattern)) {
+        Logger.log('✅ Found pattern: ' + pattern);
+        patternsFound++;
+      } else {
+        Logger.log('❌ Missing pattern: ' + pattern);
+      }
+    });
+
+    Logger.log('\n📊 Summary: Found ' + patternsFound + '/' + patterns.length + ' key patterns');
+
+    if (patternsFound >= 7) {
+      Logger.log('\n✅ SEO writing rules loaded successfully!');
+      return true;
+    } else {
+      Logger.log('\n⚠️ SEO writing rules may be incomplete');
+      return false;
+    }
+
+  } catch (e) {
+    Logger.log('❌ Error fetching SEO writing rules: ' + e.toString());
+    return false;
+  }
+}
+
+/**
  * Test both GitHub fetches together
  */
 function testGitHubSetup() {
@@ -2762,9 +2860,23 @@ function testGitHubSetup() {
     }
   }
 
+  // Test SEO writing rules
+  const seoRulesUrl = PropertiesService.getScriptProperties().getProperty('GITHUB_SEO_RULES_URL');
+  if (!seoRulesUrl) {
+    results.push('⚠️ GITHUB_SEO_RULES_URL not set (optional, will use embedded rules)');
+  } else {
+    try {
+      const seoRules = fetchSEOWritingRules();
+      results.push('✅ SEO writing rules loaded: ' + seoRules.length + ' characters');
+    } catch (e) {
+      results.push('❌ SEO rules fetch failed: ' + e.message);
+    }
+  }
+
   results.push('\n📝 Required Script Properties:');
   results.push('GITHUB_CONTEXT_URL: Raw URL to Komplai_Context_Canonical.md');
   results.push('GITHUB_HUMANIZER_URL: Raw URL to humanizer-main/SKILL.md');
+  results.push('GITHUB_SEO_RULES_URL: Raw URL to SEO-WRITING-RULES.md (optional)');
 
   ui.alert('GitHub Setup Test', results.join('\n'), ui.ButtonSet.OK);
 }

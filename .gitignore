@@ -1,2 +1,9 @@
 *.mov
 *.mp4
+client-insights/client_secret_*.json
+client-insights/credentials.json
+client-insights/token.json
+*.env
+*.env.example
+.env
+client-insights/client_secret_456035375870-dhvpba5l24l8agvcsst0dcpar82s5v02.apps.googleusercontent.com.json
