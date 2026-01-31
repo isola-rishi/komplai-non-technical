@@ -1,0 +1,43 @@
+﻿Now is the best time to build, but also the hardest
+Over the last couple of years, what’s possible has kept expanding. We’ve gone from drafting email replies to systems that can execute real work inside organisations that have been around forever. The bar has shifted from building tools to building operators. And the hard part isn’t intelligence anymore. It’s context and control.
+Right before year-end, a Foundation Capital piece framed it cleanly: context graphs, decision traces, orchestration layers. The reason it resonated isn’t that it’s a new buzzword. It’s because in real workflows, the work isn’t the happy path. It’s the exceptions, the judgment calls, and the audit trail of how you got to an answer.
+For context: I’m building Komplai. We help finance teams close their books faster. On paper, the pitch sounds almost embarrassingly simple: finance teams do a lot of manual, repetitive work that AI should be good at. So let’s build agentic systems that do it faster.
+Simple, right? Not exactly.
+Efficiency has always been the goal; But then comes the age of AI
+Organisations have always known their processes can be inefficient. And there has always been a push to make them more efficient. The playbook usually looks like: more tooling, more headcount, better SOPs, tighter approvals, clearer timelines.
+This evolution is organic. Teams learn, patch, iterate. Over time, they figure out what 'good' looks like for their business.
+Now the bar has moved.
+In SaaS, you sell a tool that makes people faster. In AI, customers aren’t satisfied with 'faster'. They want faster and cheaper, because the implicit promise is that software can now do work that previously required people.
+That’s why the 'software TAM vs salary TAM' framing shows up everywhere. The customer expectation is no longer 'help my team operate the tool'. It’s 'do the work so I don’t need to grow my team as my business grows'.
+This is also where the discourse around context becomes practical, not philosophical. Jaya Gupta put it well in a tweet: the winners won’t just be systems with a pre-configured structure. There will be systems where meaning gets learned through use and execution, because you can’t predict upfront what context will matter across businesses.
+What is the opportunity?
+Let’s make the 'context and control' problem concrete using Komplai’s wedge: GL coding.
+Every finance team has to take invoices, bills, receipts, and statements and map them to a Chart of Accounts (COA) before anything downstream works. In practice, that means a human reads the document, pulls out the details, decides which account it belongs to (often along with cost centre, project, tax treatment), and then posts it into the ERP.
+In a mature business, the COA list easily runs 500+ accounts. And that’s the trap: extraction is a solved problem. Modern models can pull dates, amounts, taxes, and line items even from messy or handwritten docs. We’ve seen Komplai reach near-human extraction accuracy. Where things break is the next step: categorisation.
+Because categorisation isn’t a language task. It's a precedent. It’s how this company treats this vendor, how they split spend across departments, what counts as marketing vs sales vs ops, which exceptions were approved last month, and what should never be repeated. With 500+ possible buckets, a model can be directionally right and still be wrong in a way finance teams can’t tolerate.
+So we built what we call Komplai’s memory: a lightweight representation of a customer’s past decisions and patterns, so the system can use their precedent as context or ‘decision traces’. Concretely, how similar documents were coded historically, how vendors map to accounts, which cost centres usually apply, and what the team corrected.
+The impact shows up immediately. Without memory, on day one, Komplai would correctly categorise roughly ~20% of documents. With memory in play, customers see ~65% accuracy on day one on the first set of documents processed. That gap is the opportunity: not 'better AI,' but company-specific context learned through execution.
+Can we push that further? Yes. The unlock is making implicit judgment explicit. That’s what we’re building next under Directives: constraints, preferences, exception handling, and approvals that turn company-specific context into something the system can follow and audit.
+  
+  
+  
+
+Okay. But why is this hard?
+Because building a tool that people operate is (relatively) easy.
+When the tool fails, people route around it. Payment is stuck? Someone calls the bank or the gateway. Approval is unclear? Someone pings the approver on email or Slack. A weird invoice shows up? Someone looks up how it was treated last month and repeats the precedent.
+Humans are the glue. And that glue is scattered.
+This is especially true in the finance month-end close. It’s common to see teams spend dozens of hours a month on close activities and take a week to 10+ business days to get to 'final' numbers. Not because they can’t post journals, but because the work is full of ambiguity, exceptions, approvals, and cross-system investigation.
+The real work of close isn’t bookkeeping. It’s context stitching.
+You’re matching partial payments. You’re resolving vendor naming inconsistencies across systems. You’re figuring out why an expense spiked and whether it’s timing or a true variance. You’re checking whether an exception was approved, and whether that approval is still valid. You’re making a judgment call and leaving a trail, so next month isn’t a reinvention.
+And that context lives everywhere: ERP, invoices, bank portals, emails, drives, tickets, chat threads, meeting notes, and a lot of 'ask John, he knows'.
+This is where agents start to break in the real world. An agent can often do the task. But it can’t reliably complete the work unless it can access the same context a human would use to resolve ambiguity, and apply the same controls a finance team needs to trust the result.
+And here’s the sharpest version of that point, from Kirk Marple: the moat isn’t really ontology. It’s temporal truth, decision traces, and fact resolution. In other words: what was true at that time, why did we decide that, and what becomes canonical when systems disagree.
+The way forward
+So the problem isn’t whether you can do the work that a tool was already doing. It’s whether you can do what the tool and the people were doing together.
+That is the gold standard on which future product businesses will be judged. Anything less will feel like a feature. Anything that hits that bar will feel like a new category.
+And it changes what 'product' means in B2B.
+Classic B2B SaaS could sometimes treat integrations as a nice-to-have, or an enterprise ask. In the agentic world, integrations become foundational because context is distributed by default. You’re not just integrating data. You’re integrating reasons, approvals, exceptions, precedent, and timelines.
+There are obvious ways to build toward it. Start with a small set of systems, prove reliability, and expand incrementally. Keep humans in the loop where needed. Capture decisions at the moment they happen. Turn repeated exceptions into repeatable workflows.
+That’s the bet we’re making with Komplai in the finance close. Not just speeding up tasks, but building toward a world where close doesn’t depend on tribal knowledge and manual stitching every month.
+Now is the best time to build because the capability is moving fast. It’s also the hardest because the bar moved.
+People won’t judge you on whether you shipped a tool. They’ll judge you on whether you shipped an operator.

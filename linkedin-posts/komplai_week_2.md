@@ -67,18 +67,17 @@ I ran an experiment last month.
 I asked 12 CFOs to send me screenshots of their "Most Used" Google Drive folders.
 
 Every single one had a folder called something like:
-• "Shadow Books"
-• "Real Numbers"
-• "Monthly Close Helper"
+- "Actuals"
+- "Real Numbers"
+- "Monthly Close Checklist"
 
 Here's what I learned:
 **Nobody trusts their ERP to do the job alone.**
 
-They're paying for QuickBooks, Zoho, or NetSuite.
-But the *real work* happens in spreadsheets that:
-• Fix missing vendor categorizations
-• Calculate multi-currency consolidations
-• Track budget vs. actuals because the ERP can't
+They're paying for QuickBooks, Xero, or NetSuite. But the *real work* happens in spreadsheets that:
+1. Fix missing vendor categorizations
+2. Calculate multi-currency consolidations
+3. Track budget vs. actuals because the ERP can't
 
 I call this the **"Shadow ERP."**
 
