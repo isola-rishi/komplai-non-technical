@@ -43,13 +43,33 @@
 
 ---
 
-### 4. Meet Larry: Agentic Close Engine
-*Ref: Screenshot .58.08*
+### 4. Meet Larry: Your Chief of Staff for Finance
+*Ref: Screenshot .58.08 / uploaded_media_1769936874034.png*
 
-*   **Label:** `Meet Larry - Your ultimate finance hire`
-*   **Headline:** Larry: Your Agentic Close Engine
-*   **Body Copy:** Komplai sits on top of your ERP stack. Larry drafts the work, your team approves exceptions, and everything is posted with evidence. You get close-ready books, not another dashboard to maintain.
-*   **How Larry builds trust?**
+*   **Label:** `Meet Larry - your ultimate finance hire`
+*   **Headline:** Larry is your Chief of Staff for Finance.
+*   **Sub-Headline:** Larry plugs into your existing tech stack to keep you connected to your business in real-time. Ask about burn rate, vendor exposure, or aging receivables - get instant, CFO-ready answers without waiting for your team to compile a spreadsheet.
+*   **Primary CTA:** `Contact Our Team`
+
+#### **Larry's Interaction Modes (2x2 Grid)**
+
+1.  **Analyze | Metrics & KPIs:**
+    Total overdue exposure across all aging buckets,
+    Cash outflow trends vs. previous month, Top 5 vendors.
+
+2.  **Explain | Deep Insights:**
+    Primary drivers behind current accounts payable,
+    Detailed aging profile, Vendor concentration risk.
+
+3.  **Search | Targeted Lookups:**
+    Recent invoices from 'Acme Corp',
+    High-value invoices >$5,000, Unpaid marketing bills.
+
+4.  **Identify | Risk & Anomaly Detection:**
+    Anomalous or large unapproved invoices,
+    Upcoming liabilities due, Overdue payment patterns.
+
+*   **Trust & Accuracy:**
     *   **Shows its work**: Larry displays its execution plan before answering, so you understand exactly how it arrived at insights.
     *   **Cites sources**: Every answer links to source data—drill down from summary to transaction level.
     *   **Flags stale data**: Larry understands when information is not updated or real-time, and lets you know so you never rely on old numbers.
