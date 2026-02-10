@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "google-docs": {
+      "command": "node",
+      "args": [
+        "/Users/rishi/mcp-googledocs-server/node_modules/@xalia/mcp-googledocs-server/dist/server.js"
+      ]
+    }
+  }
+}

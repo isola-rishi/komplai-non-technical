@@ -58,7 +58,7 @@ What's the #1 thing your close is "Waiting For" right now? 👇
 **Insight:** *"Excel remains the crutch—Even with ERPs, consolidation, projections, and analysis happen in Excel."* (Client Insight)
 
 **Headline:**
-Your ERP is $50,000/year.
+Your ERP is $75,000/year.
 Your real finance system is a Google Sheet named "Final_v3_ACTUAL_USE_THIS.xlsx"
 
 **Body:**

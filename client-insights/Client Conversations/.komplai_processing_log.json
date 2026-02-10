@@ -1,0 +1,66 @@
+{
+  "last_run": "2026-01-13T22:15:00+05:30",
+  "processed_documents": [
+    {
+      "doc_id": "1_Hj-3odPvWegfS0cSlg5OywDZEJZ6Y56OcXBQgafPUM",
+      "filename": "Mayank <> Rishi: Connect – 2025 11 29",
+      "region": "Middle East",
+      "processed_at": "2026-01-13T22:15:00+05:30"
+    },
+    {
+      "doc_id": "1Z_3V8kjUBzvw9GHXw0LE5GsgP8GS5LDd4S3dVY2wrmE",
+      "filename": "Ethic <> Komplai: Connect – 2025 10 22",
+      "region": "US",
+      "processed_at": "2026-01-13T22:15:00+05:30"
+    },
+    {
+      "doc_id": "1wlmKqz2mhLiSADBLMpgRjFhTcg-5AztNoFEPnfnGpp4",
+      "filename": "Kant <> Rishi: Connect (15 Nov '25)",
+      "region": "India",
+      "processed_at": "2026-01-13T22:15:00+05:30"
+    },
+    {
+      "doc_id": "1WAq2L_HIMIE3O8IlLOwRUyu1uZihcYH1zQDq7v6XW_o",
+      "filename": "Monica <> Rishi: Connect – 2025 11 04",
+      "region": "India",
+      "processed_at": "2026-01-13T22:15:00+05:30"
+    },
+    {
+      "doc_id": "1y39ngu9BL0NR_dl0gTKW796q7aAzD9ufJXTzn5ewuD4",
+      "filename": "Yoga <> Rishi: Connect – 2025 11 14",
+      "region": "Middle East",
+      "processed_at": "2026-01-13T22:15:00+05:30"
+    },
+    {
+      "doc_id": "1q8hqxw4gTDDEIUgilxwff3mVY4YtBDkZG05lXqidcHc",
+      "filename": "Ashish <> Rishi: Connect – 2025 11 13",
+      "region": "India",
+      "processed_at": "2026-01-13T22:15:00+05:30"
+    },
+    {
+      "doc_id": "1xPg1VauQ_je9ZAIW7V0pFvwz2RbfOxmoF5SNp3chD00",
+      "filename": "SpotDraft <> Komplai: Connect – 2025 08 21",
+      "region": "India",
+      "processed_at": "2026-01-13T22:15:00+05:30"
+    },
+    {
+      "doc_id": "1s2Rw0SAKGpnMc9p31QKWQKc-NBhBIijMHqXLShI3yn4",
+      "filename": "Devansh <> Rishi: Connect – 2025 10 29",
+      "region": "India",
+      "processed_at": "2026-01-13T22:15:00+05:30"
+    },
+    {
+      "doc_id": "1N_P3srdOdzaLP0LwSPXqBHAuU8Ry-e4Ijdv-KkZZreA",
+      "filename": "VIPL <> Komplai: Connect – 2025 10 27",
+      "region": "Pilot",
+      "processed_at": "2026-01-13T22:15:00+05:30"
+    },
+    {
+      "doc_id": "1QBmEA_VNJx4c15gzAYJvV2d6xYYbowhO3FrUnTcUEsc",
+      "filename": "Sruthi <> Rishi: Connect – 2025 10 24",
+      "region": "India",
+      "processed_at": "2026-01-13T22:15:00+05:30"
+    }
+  ],
+  "total_runs": 1
+}
