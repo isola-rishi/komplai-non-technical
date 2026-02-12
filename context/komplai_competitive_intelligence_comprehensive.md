@@ -1,5 +1,5 @@
 # Komplai Competitive Intelligence Analysis
-## Generated: January 23, 2026
+## Generated: February 12, 2026
 
 Based on updated canonical context with Larry four-mode interface, memory capabilities, and full product suite.
 
@@ -52,13 +52,14 @@ Komplai offers **nine live modules**, creating the most comprehensive AI-native 
 | **Memory-based learning** | ✅ Directive suggestions | ✅ Learning | ❌ | ✅ Human layer | ❌ | ❌ |
 | **TDS auto-handling** | ✅ Reconciliation | Unknown | Unknown | Unknown | ❌ | ❌ |
 | **Recurring expense tracker** | ✅ SaaS-specific | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Amortization & deferrals automation** | ✅ Auto-posting | Unknown | Unknown | ✅ | ✅ | ✅ |
+| **Prepaid amortization & deferrals** | Partial (via Larry) | Partial | ✅ | Partial | ✅ | ✅ |
 | **Compliance calendar** | ✅ India, US planned | Unknown | Unknown | Unknown | ✅ | ✅ |
 | **GL variance to voucher drill-down** | ✅ | Unknown | ✅ | ✅ | ✅ | ✅ |
 | **Multi-entity consolidation & reporting** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Maker-checker workflow** | ✅ (Komplai=maker, user=checker) | Unknown | Unknown | ✅ (External accountants) | ❌ | Partial |
 | **Multi-period close tracking** | ✅ (Nov, Dec, Jan) | Unknown | ✅ | ✅ | ✅ | ✅ |
-| **Implementation time** | 30 min - 2 hours | ~4 weeks | 4-6 weeks | ~2 weeks | 1.7 months | 5 months |
+| **AI Architecture** | AI-native | AI-native | AI-native | AI-native | AI-retrofitted (2025) | AI-retrofitted (2023-25) |
+| **Implementation time** | 30min-2hr | ~4 weeks | 4-6 weeks | ~2 weeks | 1.7 months | 5 months |
 | **Price (10-person team)** | $20,000 | Not public | ~$25-35k est. | $30k+ | ~$15k | $77k+ |
 
 ### Larry: The Category-Defining Feature
@@ -563,9 +564,11 @@ Don't dismiss their human review layer as inferior. Instead, position philosophi
 ✅ Variance/flux analysis
 ✅ Journal entry management
 ✅ Compliance management (SOX)
-❌ Not AI-native (Excel-centric, less automation)
+✅ AI Transaction Matching (launched September 2025)
+✅ AI Agent Builder (launched September 2025, powered by Anthropic Claude 3)
+❌ AI-retrofitted architecture (Excel-centric core with AI layer bolted on)
 ❌ No conversational AI
-❌ No memory-based learning
+❌ Less AI-native than newer competitors (Komplai, Numeric, Stacks, Maximor)
 
 **Pricing:**
 - $9k-50k annually depending on modules/users
@@ -590,7 +593,7 @@ Don't dismiss their human review layer as inferior. Instead, position philosophi
 - "Our Memory system learns and gets smarter each close. FloQast's Excel approach resets every month."
 
 **Competitive trap to avoid:**
-Don't trash Excel (many accountants love it). Instead, position evolution: "Excel is great for analysis. Komplai handles the tedious data entry and matching so your team can focus on Excel for judgment calls and variance analysis."
+Don't trash Excel (many accountants love it). Instead, position evolution: "Excel is great for analysis. Komplai handles the tedious data entry and matching so your team can focus on Excel for judgment calls and and variance analysis."
 
 **Address the maturity objection:**
 "FloQast has been around since 2013, so they're mature for Excel-centric workflows. We're AI-native from day one — built for finance teams who want automation, not just checklists."
@@ -601,48 +604,73 @@ Don't trash Excel (many accountants love it). Instead, position evolution: "Exce
 
 **Company snapshot:**
 - Los Angeles-based, founded 2001
-- Public company, $7.5B market cap
+- Public company, $7.5B market cap, 1,500+ employees
 - Enterprise-grade close automation
 - Actively de-prioritizing mid-market
 
 **Feature parity:**
-✅ Account reconciliation (rule-based)
+✅ Account reconciliation (rule-based core)
 ✅ Transaction matching (high-volume)
 ✅ Journal entry management
 ✅ Task management
 ✅ Variance analysis
-❌ Not AI-native (rule-based core with AI layer)
+✅ Intercompany accounting
+✅ Dedicated Amortization Solution (prepaid, deferred revenue, intangibles)
+❌ Not AI-native (legacy rules-based with Verity AI layer retrofitted 2023-2025)
 ❌ No conversational AI
-❌ Enterprise-only positioning
+
+**AI Architecture:**
+- **Core:** Legacy rules-based platform (20+ years old)
+- **AI Layer:** Verity AI retrofitted 2023-2025 via Google Cloud partnership
+- **Verity Prepare:** AI reconciliation agent (early access 2026)
+- **Adoption:** Only ~20% of customers using AI features as of Q4 2025
+- **Assessment:** AI-retrofitted, not AI-native
 
 **Pricing:**
 - $77k average annually (per Vendr)
 - Can reach $340k for large deployments
 - 4-10x more expensive than Komplai
+- Significant additional implementation fees
+
+**Implementation:**
+- ~5 months average
+- Requires dedicated admin/IT support
+- 60-100x slower than Komplai (30min-2hr vs. 5 months)
 
 **When to lead with Komplai:**
-1. Mid-market company (Komplai ICP, BlackLine de-prioritizing)
-2. Budget under $50k (BlackLine minimum typically higher)
-3. Needs fast implementation (30 min-2 hours vs. 5 months)
-4. Lean team without dedicated admin (BlackLine requires ongoing admin)
+1. Mid-market company (Series A-C, BlackLine de-prioritizing this segment)
+2. Budget under $50k (BlackLine minimum typically $77k+)
+3. Needs fast implementation (30min-2hr vs. 5 months)
+4. Lean team without dedicated admin
+5. Wants AI-native platform vs. retrofitted AI layer
 
 **When BlackLine may win:**
 1. Enterprise with SOX compliance needs (their core strength)
 2. Public company with audit committee oversight
-3. Multi-entity, complex organization
+3. Deeply complex multi-entity organization (100+ entities)
 4. Budget for $100k+ solution
+5. SAP integration is critical
 
 **Key talking points:**
 - "BlackLine is enterprise-grade for public companies with SOX needs. If you're Series A-C, you don't need that complexity — or that price tag."
 - "We implement in 30 minutes to 2 hours. You'll start closing faster today, while BlackLine takes 5 months to even finish onboarding."
 - "At $20k for your team size, we cost 75% less than BlackLine while delivering the automation you actually need."
 - "BlackLine is actively pulling away from mid-market. We're purpose-built for companies your size."
+- "Larry gives your CFO instant answers. BlackLine has no conversational AI interface."
+- "They're AI-retrofitted — bolting Verity AI onto a 20-year-old rules-based platform. We're AI-native from day one."
 
 **Competitive trap to avoid:**
 Never say BlackLine is "bad" (they're market leader for enterprise). Instead, position market segmentation: "BlackLine is the gold standard for enterprise. For Series A-C companies, we deliver the close automation you need without enterprise overhead."
 
 **Address the "brand safety" objection:**
 "BlackLine built their reputation serving enterprises. We're earning ours automating closes for Seed-to-Series C companies. Different markets, different needs."
+
+**Why now competing directly:**
+- BlackLine pulling away from mid-market creates vacuum
+- Price point ($77-340k) and implementation time (5 months) make them vulnerable in Series A-C segment
+- AI-retrofitted architecture vs. Komplai's AI-native approach
+- 60-100x implementation speed advantage (30min-2hr vs. 5 months)
+- Only 20% AI adoption shows retrofit struggles
 
 ---
 
@@ -968,7 +996,7 @@ Controllers burning out, CFOs hired from outside finance backgrounds. Both perso
 
 **Risk 1: Numeric or Stacks.ai builds Larry-equivalent conversational AI**
 
-**Likelihood:** Medium (12-18 months if prioritized)
+**Likelihood:** Medium (9-12 months if prioritized)
 **Impact:** High (eliminates our primary differentiator)
 
 **Mitigation:**
@@ -1109,17 +1137,18 @@ Controllers burning out, CFOs hired from outside finance backgrounds. Both perso
 |---------|---------|-----------|---------|---------|---------|-----------|
 | **Conversational AI** | ✅ Larry | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Memory Learning** | ✅ | ✅ | ❌ | ✅ (human) | ❌ | ❌ |
-| **Reconciliation AI** | ✅ | ✅ | ✅ | ✅ | Partial | Partial |
+| **Reconciliation AI** | ✅ | ✅ | ✅ | ✅ | Partial (retrofitted) | Partial (retrofitted) |
 | **Close Checklist** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Journal Automation** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Variance Analysis** | ✅ | ✅ | ✅ (AI) | ✅ | ✅ | ✅ |
 | **Recurring Expense Tracking** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Amortization & Deferrals** | ✅ Auto-posting | Unknown | Unknown | ✅ | ✅ | ✅ |
+| **Prepaid Amortization & Deferrals** | Partial (via Larry) | Partial | ✅ | Partial | ✅ | ✅ |
 | **Compliance Calendar** | ✅ (India, US planned) | Unknown | Unknown | Unknown | ✅ | ✅ |
 | **Cash Management** | Partial | ❌ | ✅ | ✅ | ❌ | ❌ |
 | **Multi-Entity Consolidation** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Maker-Checker Workflow** | ✅ (Internal team) | Unknown | Unknown | ✅ (External) | ❌ | Partial |
-| **Implementation** | 30 min-2 hrs | ~4 weeks | 4-6 weeks | ~2 weeks | 1.7 mo | 5 mo |
+| **AI Architecture** | AI-native | AI-native | AI-native | AI-native | AI-retrofitted | AI-retrofitted |
+| **Implementation** | 30min-2hr | ~4 weeks | 4-6 weeks | ~2 weeks | 1.7 mo | 5 mo |
 | **Annual Price (10-person team)** | $20k | Not public | $25-35k | $30k+ | $15-20k | $77k+ |
 
 ### When to Lead with Komplai (Quick Reference)
@@ -1150,5 +1179,5 @@ Controllers burning out, CFOs hired from outside finance backgrounds. Both perso
 ---
 
 *End of Competitive Intelligence Analysis*
-*Last updated: January 23, 2026*
-*Next review: April 2026 (quarterly cadence)*
+*Last updated: February 12, 2026*
+*Next review: May 2026 (quarterly cadence)*

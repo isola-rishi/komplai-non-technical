@@ -1,6 +1,6 @@
 # Komplai: Canonical Context Reference
 
-*Last updated: January 29, 2026*
+*Last updated: February 12, 2026*
 
 This is the single source of truth for Komplai positioning, product capabilities, competitive intelligence, and messaging. Use this document for sales enablement, marketing content, investor materials, and team alignment.
 
@@ -316,7 +316,7 @@ Structured review workflows where Komplai acts as the maker and human reviewers 
 
 ## Implementation & Deployment
 
-**Deployment time:** 30 minutes for go-live (not weeks or months)
+**Deployment time:** 30 minutes to 2 hours for go-live (not weeks or months)
 
 **Implementation approach:**
 - Hooks into existing ERPs (no rip-and-replace)
@@ -324,7 +324,7 @@ Structured review workflows where Komplai acts as the maker and human reviewers 
 - These knowledge graphs enable users to orchestrate work more effectively over time
 - No rigid rules to configure — adapts to how your finance team already works
 
-**Competitive advantage:** 3 -week full implementation vs. 5+ months for enterprise tools like BlackLine.
+**Competitive advantage:** 30-minute to 2-hour implementation vs. weeks/months for competitors (Maximor ~2 weeks, Stacks.ai ~4 weeks, Numeric 4-6 weeks, FloQast 1.7 months, BlackLine 5 months).
 
 ---
 
@@ -524,31 +524,31 @@ Every company's finance operations are different.
 | **Stacks.ai** | Amsterdam | $10M | Mid-market, retail/commerce | "One-click close", agentic AI |
 | **Numeric** | San Francisco | $51M Series B | Mid-market to enterprise | AI-powered close + cash management |
 | **Maximor** | New York | $9M | Mid-market/enterprise ($50M+ rev) | "Audit-Ready Agents", human+AI hybrid |
+| **FloQast** | Los Angeles | $200M+ | Mid-market, Excel-centric | Excel-integrated, AI-retrofitted (2025) |
+| **BlackLine** | Los Angeles | Public ($7.5B) | Enterprise (de-prioritizing mid-market) | Legacy rules-based + Verity AI layer |
 
 ### Aspirational Competitors
 
-| Company | Target Market | Why Not Competing Directly Yet |
-|---------|---------------|-------------------------------|
-| **FloQast** | Mid-market, Excel-centric teams | More mature, established brand |
-| **BlackLine** | Enterprise, public companies | Enterprise-only, complex implementation |
+None currently - FloQast and BlackLine moved to direct competitors as market dynamics shift.
 
 ### Market Position
 
-Komplai currently sits in the **AI-native + SMB/mid-market** quadrant, with ambitions to move upmarket to enterprise:
+Komplai should position in the **AI-native + Mid-market quadrant:**
 
 ```
                     Enterprise Focus
                           │
-        BlackLine         │         
-        (legacy,          │         
-        expensive)        │         
+        BlackLine         │    Maximor
+        (legacy,          │    ($50M+ rev)
+        expensive)        │
                           │
   Rule-based ────────────┼──────────── AI-native
                           │
         FloQast           │    Komplai
-        (Excel-centric)   │    Stacks.ai
+        (Excel-centric)   │    (Series A-C)
+                          │    
+                          │    Stacks.ai
                           │    Numeric
-                          │    Maximor
                     SMB/Mid-market
 ```
 
@@ -631,17 +631,17 @@ Komplai currently sits in the **AI-native + SMB/mid-market** quadrant, with ambi
 
 | Feature | Komplai | Stacks.ai | Numeric | Maximor | FloQast | BlackLine |
 |---------|---------|-----------|---------|---------|---------|-----------|
-| AI-powered reconciliation | ✅ | ✅ | ✅ | ✅ | Partial | Partial |
+| AI-powered reconciliation | ✅ | ✅ | ✅ | ✅ | Partial (retrofitted) | Partial (retrofitted) |
 | Conversational AI assistant | ✅ (Larry) | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Close checklist/tasks | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Journal entry automation | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Variance/flux analysis | ✅ | ✅ | ✅ (AI-drafted) | ✅ | ✅ | ✅ |
 | Recurring expense tracking | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Amortization & deferrals | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Prepaid amortization & deferrals | Partial (via Larry) | Partial | ✅ | Partial | ✅ | ✅ |
 | Cash management | Partial | ❌ | ✅ | ✅ | ❌ | ❌ |
 | Multi-entity consolidation | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Human review layer (maker-checker) | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
-| Implementation time | 30 min | ~4 weeks | ~4-6 weeks | ~2 weeks | ~1.7 months | ~5 months |
+| Implementation time | 30min-2hr | ~4 weeks | ~4-6 weeks | ~2 weeks | ~1.7 months | ~5 months |
 | Price range (annual) | $10-30k | Not public | $15-50k | $30k+ | $9-50k | $77-340k |
 
 ---
