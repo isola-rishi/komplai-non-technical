@@ -1,5 +1,5 @@
 /**
- * SEO Content Automation Tool - OPTIMIZED VERSION
+ * SEO Content Automation Tool - OPTIMIZED VERSION (v2 — Feb 2026)
  * Google Apps Script for generating SEO-optimized content with improved CTR and readability
  *
  * CHANGES FROM ORIGINAL:
@@ -12,10 +12,23 @@
  * ✅ Smart Unsplash image selection (relevance-based)
  * ✅ Better internal linking suggestions
  *
+ * v2 CHANGES (Feb 2026 — SEO audit alignment):
+ * ✅ Title prompt: Benefit + Timeframe formula (no "Complete Guide", "Comprehensive", etc.)
+ * ✅ Meta prompt: Result + Proof + Emotion formula (150-160 chars, keyword in first 60)
+ * ✅ Cadence control: Mon/Wed/Fri only, max 1 article per scheduled run (3/week)
+ * ✅ Cannibalisation awareness: 4 flagged keywords inject differentiation instructions into prompts
+ * ✅ Cross-linking: Cannibalised keywords auto-include mandatory cross-links to conflicting posts
+ *
+ * v2.1 CHANGES (Feb 2026 — content quality fixes):
+ * ✅ Heading colors: All H1/H2/H3 tags now mandate inline color: #1a1a1a (fixes white font issue)
+ * ✅ Action Checklist: Moved to top of article (right after intro, before first H2) for immediate value
+ * ✅ Komplai integration: 1-2 natural feature mentions + mandatory CTA box before conclusion
+ * ✅ AI Overview optimization: Q&A pairs, numbered steps, comparison tables, definition boxes, FAQ section
+ *
  * NO CHANGES:
  * ✅ Sheet structure (all column references identical)
  * ✅ Script properties (no new properties required)
- * ✅ 7-step workflow (maintained for user familiarity)
+ * ✅ 6-step workflow (maintained for user familiarity)
  * ✅ All existing functions and menus
  *
  * Setup Instructions: (IDENTICAL TO ORIGINAL)
@@ -56,6 +69,41 @@ const STATUS = {
   POSTING: 'Posting to WP...',
   PUBLISHED: 'Published',
   ERROR: 'Error'
+};
+
+// Cadence control: max articles per scheduled run + allowed days
+const MAX_ARTICLES_PER_RUN = 1;
+const PUBLISH_DAYS = [1, 3, 5]; // Monday=1, Wednesday=3, Friday=5
+
+// Cannibalisation map: keywords that conflict with existing published articles.
+// The content planner injects these into the Claude prompt so generated content
+// differentiates itself from existing pages.
+const CANNIBALISATION_MAP = {
+  'close management software comparison 2026': {
+    conflicts: [
+      { postId: 629, title: 'AI Close Management Software: 2025 Platform Review', url: 'https://blog.letskomplai.com/?p=629' },
+      { postId: 828, title: 'Close Management Software Implementation Time: 2026 Guide', url: 'https://blog.letskomplai.com/?p=828' }
+    ],
+    instruction: 'H1 must NOT contain "close management software". Frame as a head-to-head comparison piece with feature tables and pricing grids. Cross-link to Post 629 and Post 828.'
+  },
+  'QuickBooks enterprise close process': {
+    conflicts: [
+      { postId: 727, title: 'Enterprise Close Process for Growing Teams: 2026 Guide', url: 'https://blog.letskomplai.com/?p=727' }
+    ],
+    instruction: 'Focus on QuickBooks-specific pain points — NOT generic enterprise close. Frame around outgrowing QuickBooks. Cross-link to Post 727.'
+  },
+  'manufacturing close process automation': {
+    conflicts: [
+      { postId: 789, title: 'AI-Powered Close Process Automation Platforms 2026', url: 'https://blog.letskomplai.com/?p=789' }
+    ],
+    instruction: 'Focus exclusively on manufacturing-specific concerns (cost accounting, inventory valuation, WIP). NOT generic close automation. Cross-link to Post 789.'
+  },
+  'Stacks AI close management review': {
+    conflicts: [
+      { postId: 629, title: 'AI Close Management Software: 2025 Platform Review', url: 'https://blog.letskomplai.com/?p=629' }
+    ],
+    instruction: 'Pure product review of Stacks.ai only. Do NOT cover general AI close management. Cross-link to Post 629. Consider whether this should be a section in Post 629 instead.'
+  }
 };
 
 /**
@@ -267,59 +315,69 @@ function removeDailyTrigger() {
 }
 
 /**
- * Scheduled function called by the daily trigger (UNCHANGED)
+ * Scheduled function called by the daily trigger
+ * UPDATED: Now respects cadence control (Mon/Wed/Fri, max 1 article per run)
+ * to match the 3-articles-per-week publishing schedule.
  */
 function scheduledDailyRun() {
   const today = new Date();
-  const dayOfWeek = today.getDay();
+  const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
 
-  if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-    Logger.log(`Running scheduled content generation on ${today.toDateString()}`);
+  // Only run on designated publish days (default: Mon=1, Wed=3, Fri=5)
+  if (!PUBLISH_DAYS.includes(dayOfWeek)) {
+    Logger.log(`Skipping scheduled run - today is ${today.toDateString()} (not a publish day). Publish days: ${PUBLISH_DAYS.join(', ')}`);
+    return;
+  }
 
-    let generated = 0;
-    let totalPending = 0;
-    const errors = [];
+  Logger.log(`Running scheduled content generation on ${today.toDateString()} (publish day)`);
 
-    try {
-      const spreadsheetId = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
-      if (!spreadsheetId) {
-        const errMsg = 'SPREADSHEET_ID not set. Please reinstall the trigger.';
-        Logger.log('ERROR: ' + errMsg);
-        errors.push(errMsg);
-        sendTriggerNotificationEmail(0, 0, errors);
-        return;
-      }
+  let generated = 0;
+  let totalPending = 0;
+  const errors = [];
 
-      const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
-      const sheet = spreadsheet.getActiveSheet();
-      const lastRow = sheet.getLastRow();
-
-      for (let row = 2; row <= lastRow; row++) {
-        const status = sheet.getRange(row, COLS.STATUS).getValue();
-        if (status === STATUS.PENDING || status === '') {
-          totalPending++;
-          try {
-            generateContentForRow(sheet, row);
-            generated++;
-          } catch (rowError) {
-            const keyword = sheet.getRange(row, COLS.KEYWORD).getValue();
-            const errMsg = `Row ${row} (${keyword}): ${rowError.toString()}`;
-            Logger.log('Row error: ' + errMsg);
-            errors.push(errMsg);
-          }
-        }
-      }
-
-      Logger.log(`Scheduled run complete. Generated content for ${generated}/${totalPending} rows.`);
-    } catch (e) {
-      Logger.log(`Scheduled run error: ${e.toString()}`);
-      errors.push(e.toString());
+  try {
+    const spreadsheetId = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
+    if (!spreadsheetId) {
+      const errMsg = 'SPREADSHEET_ID not set. Please reinstall the trigger.';
+      Logger.log('ERROR: ' + errMsg);
+      errors.push(errMsg);
+      sendTriggerNotificationEmail(0, 0, errors);
+      return;
     }
 
-    sendTriggerNotificationEmail(generated, totalPending, errors);
-  } else {
-    Logger.log(`Skipping scheduled run - today is ${today.toDateString()} (weekend)`);
+    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const sheet = spreadsheet.getActiveSheet();
+    const lastRow = sheet.getLastRow();
+
+    for (let row = 2; row <= lastRow; row++) {
+      // Stop once we hit the per-run limit
+      if (generated >= MAX_ARTICLES_PER_RUN) {
+        Logger.log(`Reached max articles per run (${MAX_ARTICLES_PER_RUN}). Stopping.`);
+        break;
+      }
+
+      const status = sheet.getRange(row, COLS.STATUS).getValue();
+      if (status === STATUS.PENDING || status === '') {
+        totalPending++;
+        try {
+          generateContentForRow(sheet, row);
+          generated++;
+        } catch (rowError) {
+          const keyword = sheet.getRange(row, COLS.KEYWORD).getValue();
+          const errMsg = `Row ${row} (${keyword}): ${rowError.toString()}`;
+          Logger.log('Row error: ' + errMsg);
+          errors.push(errMsg);
+        }
+      }
+    }
+
+    Logger.log(`Scheduled run complete. Generated ${generated}/${totalPending} pending. Max per run: ${MAX_ARTICLES_PER_RUN}.`);
+  } catch (e) {
+    Logger.log(`Scheduled run error: ${e.toString()}`);
+    errors.push(e.toString());
   }
+
+  sendTriggerNotificationEmail(generated, totalPending, errors);
 }
 
 /**
@@ -659,14 +717,29 @@ function createContentPlan(keyword, secondaryKeywords, searchIntent, targetWordC
   const contextHint = komplaiContext ?
     `Company: ${komplaiContext.companyOverview}. ICP: ${komplaiContext.targetICP}.` : '';
 
+  // Check for cannibalisation risk
+  let cannibalWarning = '';
+  const cannibalData = CANNIBALISATION_MAP[keyword];
+  if (cannibalData) {
+    const conflictList = cannibalData.conflicts.map(c =>
+      `"${c.title}" (${c.url})`
+    ).join(', ');
+    cannibalWarning = `
+⚠️ CANNIBALISATION WARNING: This keyword conflicts with existing articles: ${conflictList}
+INSTRUCTION: ${cannibalData.instruction}
+You MUST include cross-links to these existing articles in your backlink opportunities AND differentiate the content angle.`;
+  }
+
   const prompt = `Plan SEO article for: "${keyword}"${secondaryKeywordsText}
 Intent: ${searchIntent} | Words: ${targetWordCount}
 
 ${contextHint}
+${cannibalWarning}
 
 Existing posts: ${existingPostsSummary || 'None yet'}
 
-Task: Find 3-5 backlink opportunities + unique angles + key facts
+Task: Find 3-5 backlink opportunities + unique angles + key facts.
+${cannibalData ? 'CRITICAL: Differentiate this article from the conflicting pages listed above. Do NOT duplicate their angle or H1 phrasing.' : ''}
 
 Return JSON:
 {
@@ -675,7 +748,7 @@ Return JSON:
   "uniqueAngles": ["..."],
   "keyFacts": [{"fact": "...", "suggestedSource": "..."}],
   "suggestedH2s": ["..."],
-  "snippetFormat": "paragraph|list|table"
+  "snippetFormat": "paragraph|list|table"${cannibalData ? ',\n  "cannibalisation_crosslinks": [{"url": "...", "anchorText": "..."}]' : ''}
 }`;
 
   const payload = {
@@ -786,24 +859,53 @@ Write naturally:
 - Mix sentence lengths. Vary rhythm.
 - Be conversational. Use contractions.`;
 
-  // OPTIMIZED PROMPT (40% shorter than original)
+  // Check for cannibalisation constraints
+  let cannibalSection = '';
+  const cannibalData = CANNIBALISATION_MAP[keyword];
+  if (cannibalData) {
+    const conflicts = cannibalData.conflicts.map(c =>
+      `- "${c.title}" → ${c.url}`
+    ).join('\n');
+    cannibalSection = `
+⚠️ CANNIBALISATION ALERT — MUST FOLLOW:
+This keyword conflicts with existing published articles:
+${conflicts}
+
+${cannibalData.instruction}
+
+You MUST cross-link to these articles using [INTERNAL: anchor text] placeholders.
+`;
+  }
+
+  // OPTIMIZED PROMPT — Updated with Benefit+Timeframe title formula and Result+Proof+Emotion meta formula
   const prompt = `Generate SEO article for: "${keyword}"${secondaryKeywordsText}
 
 TARGET: ${targetWordCount} words (${minWords}-${maxWords} acceptable) | Intent: ${searchIntent} | US English | Year: ${currentYear}
-
+${cannibalSection}
 ═══════════════════════════════════════════
 CTR OPTIMIZATION (PRIORITY #1)
 ═══════════════════════════════════════════
-Generate 3 title options:
-1. Benefit + Timeframe: "[Specific outcome] in [X days/hours]: [Keyword] Guide"
-2. Problem + Solution: "[Relatable pain]? How [Keyword] Fixes [Specific issue]"
-3. Curiosity: "Why [Authority figure] [Transformation] (And [Alternative])"
+TITLE — Benefit + Timeframe Formula (MANDATORY):
+Lead with the OUTCOME the reader gets, not the technology category. Include [${currentYear}] timeframe marker.
 
-Pick BEST based on competitiveness. Must be 50-60 chars, include keyword naturally.
+Generate 3 title options using these patterns:
+1. "[Outcome/benefit]: [How] [Timeframe]" — e.g. "Stop Manual Bank Recs: 7 AI Tools That Match Statements in Minutes [2026]"
+2. "[Pain question]? [Solution with specifics] [Timeframe]" — e.g. "Outgrowing FloQast? 7 AI-Native Alternatives That Scale With You [2026]"
+3. "[Specific result] — [What to use/do] in [Year]" — e.g. "The Controller's Stack That Cuts Close by 5 Days — What to Use in 2026"
 
-Meta description (155-160 chars, keyword in first 60):
-[Specific result] + [Social proof] + [Emotional benefit]
-Example: "200+ US finance teams cut close time 70% with continuous close. Stop working weekends—here's the exact playbook."
+Pick BEST for this keyword's competitiveness. Must be 50-65 chars, include keyword naturally.
+
+BANNED in titles: "Complete Guide", "Comprehensive", "Essential Tools", "Ultimate", "Everything You Need to Know". These are generic filler that kills CTR.
+${cannibalData ? 'ALSO BANNED: Do NOT use the exact core phrase from the conflicting articles listed above.' : ''}
+
+META DESCRIPTION — Result + Proof + Emotion Formula (MANDATORY):
+Format: [Specific result or stat]. [Proof point or mechanism]. [Emotional hook or CTA].
+Must be 150-160 characters. Keyword in first 60 characters.
+
+Examples:
+- "200+ finance teams cut bank rec time by 80% with AI matching. Compare 7 tools on speed, accuracy, and price — see which fits."
+- "Teams switching from FloQast save 6+ hours per close with AI-native platforms. Compare 7 alternatives on price, features, and speed."
+- "The step-by-step playbook 200+ controllers used to cut close from 10 days to 3. No new hires — just smarter sequencing and AI."
 
 ═══════════════════════════════════════════
 CONTENT REQUIREMENTS (Priority Order)
@@ -827,8 +929,11 @@ CONTENT REQUIREMENTS (Priority Order)
    - H2s every 400-500 words (use natural headings, don't force numbers)
    - H3s every 200-300 words to break up sections (MANDATORY - no section over 200 words without a break)
    - Quick answer box in first 150 words
+   - ACTION CHECKLIST (immediately after quick answer box, BEFORE the first H2):
+     Place a styled box with 5-7 concrete action items the reader can do today.
+     Format: <div style="background: #f0f7ff; border-left: 4px solid #0066cc; padding: 20px; margin: 24px 0; border-radius: 4px;"><h3 style="color: #1a1a1a; margin-top: 0;">Your Action Checklist</h3><ul>...</ul></div>
+     This is the FIRST thing readers see after the intro. Delivers value upfront so they stay.
    - Key Statistics callout (within first 30%)
-   - Action Checklist box (middle)
    - "What To Do Next" section (before conclusion)
    - Sources section (end)
 
@@ -847,6 +952,40 @@ CONTENT REQUIREMENTS (Priority Order)
    - Use US company examples: US-based startups, Fortune 500 companies
    - US spelling throughout: "optimize" not "optimise", "color" not "colour"
 
+6. Komplai Integration (MANDATORY):
+   - Include 1-2 natural mentions of Komplai in the article body. Frame as "tools like Komplai" or "platforms such as Komplai" — weave it into the narrative where AI close management or automation is discussed.
+   - Show HOW Komplai's features solve the specific problem the article covers. Examples:
+     * "Komplai's AI matching engine reconciles bank statements in minutes instead of hours"
+     * "With Komplai, your close checklist auto-sequences tasks based on dependencies"
+     * "Komplai flags anomalies in real-time, so you catch issues before they compound"
+   - Do NOT be salesy or pitch-heavy. The tone is educational — "here's how this category of tool works, and Komplai is one example."
+   - MANDATORY CTA BLOCK (place before the conclusion / "What To Do Next" section):
+     <div style="background: #f8f9fa; border: 2px solid #0066cc; border-radius: 8px; padding: 24px; margin: 32px 0; text-align: center;">
+       <h3 style="color: #1a1a1a; margin-top: 0;">See How Komplai Can Help Your Team</h3>
+       <p style="text-align: center; color: #333;">Book a 15-minute walkthrough with our team. No pitch — just a look at how AI close management works for teams like yours.</p>
+       <a href="CTA_LINK_PLACEHOLDER" style="display: inline-block; background: #0066cc; color: #ffffff; padding: 12px 28px; border-radius: 6px; text-decoration: none; font-weight: bold;">Book a Walkthrough</a>
+     </div>
+
+7. AI Overview / Google AI Mode Optimization (MANDATORY):
+   Google's AI Overview pulls structured, direct answers from blog content. To maximize the chance of being cited:
+   - DIRECT ANSWER PATTERN: Within the first 50 words, provide a clear, standalone answer to the query. Format as: "[Keyword] is/means/works by [concise 1-2 sentence definition]." This text should make sense if extracted on its own.
+   - QUESTION-ANSWER PAIRS: For each H2 section, start with a question variant of the heading, then answer it directly in 2-3 sentences before elaborating. These Q&A pairs are what AI mode extracts.
+     Example: H2 = "How Bank Reconciliation Automation Works" → First paragraph: "Bank reconciliation automation works by using AI matching algorithms to compare your GL entries against bank statement lines in real-time. Most tools achieve 90%+ auto-match rates, leaving only exceptions for human review."
+   - NUMBERED PROCESS STEPS: When explaining how something works, use numbered lists with bold step names:
+     <ol><li><strong>Step name</strong> - Explanation</li></ol>
+     AI mode heavily favors numbered how-to content.
+   - COMPARISON TABLES: When comparing tools, methods, or approaches, use HTML tables with clear column headers. AI mode pulls tables directly.
+     <table style="width:100%; border-collapse: collapse;"><tr style="background: #f0f7ff;"><th style="padding: 10px; border: 1px solid #ddd; color: #1a1a1a;">...</th></tr></table>
+   - DEFINITION BOXES: For key terms, use a styled definition block:
+     <div style="background: #f9f9f9; border-left: 3px solid #0066cc; padding: 12px 16px; margin: 16px 0;"><strong>[Term]:</strong> [Clear 1-2 sentence definition]</div>
+   - STAT CALLOUTS: Wrap key statistics in a format AI can extract:
+     <p><strong>Key stat:</strong> [Specific number + context]</p>
+   - FAQ SECTION (MANDATORY — place before Sources): Include 3-5 FAQs using proper HTML:
+     <h2 style="color: #1a1a1a;">Frequently Asked Questions</h2>
+     <h3 style="color: #1a1a1a;">[Question]?</h3>
+     <p style="text-align: justify;">[Direct 2-3 sentence answer]</p>
+     Each FAQ answer must be self-contained — it should make sense if pulled out of context by Google AI.
+
 ${humanizerHints}
 ${contextSection}
 ${researchSummary}
@@ -855,9 +994,14 @@ HTML Requirements:
 - Hero image: <!-- wp:image {"sizeSlug":"large"} --><figure class="wp-block-image size-large"><img src="https://images.unsplash.com/photo-[PHOTO_ID]?w=1600&h=900&fit=crop" alt="[keyword-relevant alt]"/></figure><!-- /wp:image -->
   ${usedImages && usedImages.size > 0 ? `Don't use: ${Array.from(usedImages).join(', ')}` : ''}
   Use relevant finance/business/office photo ID.
+- HEADING COLORS (MANDATORY — headings render white without this):
+  All H1 tags: <h1 style="color: #1a1a1a;">...</h1>
+  All H2 tags: <h2 style="color: #1a1a1a;">...</h2>
+  All H3 tags: <h3 style="color: #1a1a1a;">...</h3>
+  NEVER omit the color style on any heading. Every single H1, H2, H3 must have style="color: #1a1a1a;".
 - Justified paragraphs: <p style="text-align: justify;">...</p>
 - Related articles: <p>[RELATED_ARTICLE_PLACEHOLDER_1]</p> <p>[RELATED_ARTICLE_PLACEHOLDER_2]</p>
-- CTA links: https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ13_PU25qP6mHW9P6VCKYXD9vRfwvxQDP8ZlxUJD1Un4mC20CLjx0zag4E9-oPAYaqjxMlGhN29
+- CTA link: Replace CTA_LINK_PLACEHOLDER with: https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ13_PU25qP6mHW9P6VCKYXD9vRfwvxQDP8ZlxUJD1Un4mC20CLjx0zag4E9-oPAYaqjxMlGhN29
 
 FINAL VERIFICATION BEFORE SUBMITTING:
 ✓ Check: NO consecutive sentences start with the same word (scan entire article)

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E2 — What Larry Found (Email Mockup)</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: #F3F4F6;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .email-wrapper {
+    max-width: 600px;
+    margin: 40px auto;
+    background: #FFFFFF;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .badge {
+    background: #F3F4F6;
+    text-align: center;
+    padding: 12px;
+    font-size: 11px;
+    color: #9CA3AF;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .email-body {
+    padding: 32px 32px 24px;
+  }
+  .greeting {
+    font-size: 15px;
+    color: #374151;
+    line-height: 1.7;
+    margin-bottom: 8px;
+  }
+
+  /* Primary Insight Card */
+  .primary-insight {
+    border-top: 4px solid #EF4444;
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-top: 4px solid #EF4444;
+    border-radius: 8px;
+    padding: 24px;
+    margin: 20px 0;
+  }
+  .insight-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #EF4444;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .insight-headline {
+    font-size: 17px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 16px;
+    line-height: 1.3;
+  }
+
+  /* Metric Callout */
+  .metric-callout {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #F3F4F6;
+  }
+  .metric-value {
+    font-size: 36px;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.5px;
+  }
+  .metric-trend {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .trend-arrow {
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .trend-arrow.up-bad {
+    color: #EF4444;
+  }
+  .trend-arrow.down-good {
+    color: #22C55E;
+  }
+  .trend-pct {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .trend-pct.bad {
+    color: #EF4444;
+  }
+  .trend-pct.good {
+    color: #22C55E;
+  }
+  .trend-period {
+    font-size: 13px;
+    color: #9CA3AF;
+    margin-left: 4px;
+  }
+
+  .insight-detail {
+    font-size: 14px;
+    color: #4B5563;
+    line-height: 1.65;
+  }
+
+  /* Quick Stats Row */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    margin-top: 28px;
+  }
+  .stats-row {
+    display: flex;
+    gap: 0;
+    margin: 16px 0 24px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .stat-cell {
+    flex: 1;
+    text-align: center;
+    padding: 16px 12px;
+    border-right: 1px solid #E5E7EB;
+  }
+  .stat-cell:last-child {
+    border-right: none;
+  }
+  .stat-cell-label {
+    font-size: 11px;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .stat-cell-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #111827;
+  }
+  .stat-cell-accent {
+    display: block;
+    height: 3px;
+    margin-top: 10px;
+    border-radius: 2px;
+  }
+
+  /* Secondary Insight */
+  .secondary-insight {
+    background: #F9FAFB;
+    border-left: 4px solid #F59E0B;
+    padding: 16px;
+    border-radius: 0 6px 6px 0;
+    margin: 20px 0;
+  }
+  .secondary-headline {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 4px;
+  }
+  .secondary-detail {
+    font-size: 13px;
+    color: #6B7280;
+    line-height: 1.5;
+  }
+
+  /* Risk Alerts */
+  .risks-section {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 24px 0;
+  }
+  .risks-header {
+    font-size: 13px;
+    font-weight: 700;
+    color: #991B1B;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .risk-item {
+    font-size: 13px;
+    color: #991B1B;
+    line-height: 1.5;
+    padding: 6px 0;
+    border-bottom: 1px solid #FECACA;
+  }
+  .risk-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .risk-item strong {
+    color: #7F1D1D;
+  }
+
+  /* Closing text */
+  .closing {
+    font-size: 14px;
+    color: #4B5563;
+    line-height: 1.65;
+    margin: 20px 0 4px;
+  }
+
+  /* CTA Button */
+  .cta-container {
+    margin: 28px 0 20px;
+  }
+  .cta-button {
+    display: inline-block;
+    background: #111827;
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 28px;
+    border-radius: 6px;
+    text-decoration: none;
+    letter-spacing: 0.2px;
+  }
+
+  /* Signature */
+  .signature {
+    font-size: 14px;
+    color: #374151;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #F3F4F6;
+    line-height: 1.6;
+  }
+  .signature-name {
+    font-weight: 600;
+    color: #111827;
+  }
+  .signature-title {
+    font-size: 13px;
+    color: #9CA3AF;
+  }
+
+  /* Footer */
+  .email-footer {
+    padding: 20px 32px;
+    background: #F9FAFB;
+    border-top: 1px solid #E5E7EB;
+    text-align: center;
+  }
+  .footer-text {
+    font-size: 11px;
+    color: #9CA3AF;
+    line-height: 1.6;
+  }
+  .footer-link {
+    color: #6B7280;
+    text-decoration: underline;
+  }
+
+  /* Mockup label */
+  .mockup-label {
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    color: #9CA3AF;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-label">
+  EMAIL MOCKUP — E2: What Larry Found &middot; Day 1 (24hrs post-sync, user hasn't returned) &middot; Classification: Marketing
+</div>
+
+<div class="email-wrapper">
+
+  <div class="badge">
+    From: Rishi Isola &lt;rishi@komplai.com&gt; &middot; Subject: $42,300 in new recurring charges — Larry found something
+  </div>
+
+  <div class="email-body">
+
+    <div class="greeting">
+      Hi Suman,<br><br>
+      You connected your QuickBooks yesterday. Larry has been analyzing overnight. Here's the headline.
+    </div>
+
+    <!-- PRIMARY INSIGHT CARD -->
+    <div class="primary-insight">
+      <div class="insight-label">&#9888; Needs Attention</div>
+      <div class="insight-headline">Operating expenses up 18% vs. last quarter</div>
+
+      <!-- METRIC CALLOUT -->
+      <div class="metric-callout">
+        <span class="metric-value">$42,300</span>
+        <div class="metric-trend">
+          <span class="trend-arrow up-bad">&#8593;</span>
+          <span class="trend-pct bad">18%</span>
+          <span class="trend-period">vs. Q3 2025</span>
+        </div>
+      </div>
+
+      <div class="insight-detail">
+        Your operating expenses jumped from $235K to $277K quarter-over-quarter. The increase is concentrated in software subscriptions (+$4,200/mo) and contractor costs (+$6,800/mo). Three new SaaS vendors were added in November that weren't in the prior quarter.
+      </div>
+    </div>
+
+    <!-- QUICK STATS -->
+    <div class="section-label">Larry's Analysis Depth</div>
+
+    <div class="stats-row">
+      <div class="stat-cell">
+        <div class="stat-cell-label">Transactions</div>
+        <div class="stat-cell-value">12,847</div>
+        <span class="stat-cell-accent" style="background: #3B82F6;"></span>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-label">Vendors</div>
+        <div class="stat-cell-value">143</div>
+        <span class="stat-cell-accent" style="background: #3B82F6;"></span>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-cell-label">Anomalies</div>
+        <div class="stat-cell-value" style="color: #EF4444;">7</div>
+        <span class="stat-cell-accent" style="background: #EF4444;"></span>
+      </div>
+    </div>
+
+    <!-- SECONDARY INSIGHT -->
+    <div class="secondary-insight">
+      <div class="secondary-headline">Also worth reviewing: AR aging is slipping</div>
+      <div class="secondary-detail">
+        3 customers have stretched payment terms beyond 90 days this quarter. Meridian Corp alone owes $28,500. Your average days-to-pay increased from 34 to 47 days.
+      </div>
+    </div>
+
+    <!-- RISKS / NEEDS OVERSIGHT -->
+    <div class="risks-section">
+      <div class="risks-header">&#9888; Needs Your Attention</div>
+      <div class="risk-item">
+        <strong>New vendor without approval trail:</strong> CloudOps Inc — $8,400/mo starting Dec 2025. No prior history in your data.
+      </div>
+      <div class="risk-item">
+        <strong>Auto-renewal increase:</strong> DataSync Pro renewed at $3,200/mo (was $2,700 — 18.5% increase). No corresponding usage change detected.
+      </div>
+      <div class="risk-item">
+        <strong>Cash position declining:</strong> Down 12% month-over-month. Current: $284,300. At current burn, runway is ~11 months.
+      </div>
+    </div>
+
+    <!-- CLOSING -->
+    <div class="closing">
+      Larry has the full breakdown ready — including which vendors are driving the change, how each category compares to your prior quarter, and 4 more anomalies worth reviewing.
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-container">
+      <a href="#" class="cta-button">See the full analysis &rarr;</a>
+    </div>
+
+    <!-- SIGNATURE -->
+    <div class="signature">
+      <span class="signature-name">— Rishi</span><br>
+      <span class="signature-title">Founder, Komplai</span>
+    </div>
+
+  </div>
+
+  <div class="email-footer">
+    <div class="footer-text">
+      You signed up for Komplai and connected your QuickBooks account.<br>
+      <a href="#" class="footer-link">Manage preferences</a> &middot; <a href="#" class="footer-link">Unsubscribe</a>
+    </div>
+  </div>
+
+</div>
+
+<div class="mockup-label">
+  Sample data: QuickBooks &middot; Acme Corp &middot; Primary insight selected by highest severity<br>
+  Risk section shows max 3 items (capped to avoid alarm fatigue) &middot; Sorted by severity: new vendor > auto-renewal > cash position<br>
+  This email sent because user has NOT returned to app within 24hrs of ERP sync
+</div>
+
+</body>
+</html>

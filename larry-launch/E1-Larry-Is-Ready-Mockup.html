@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E1 — Larry Is Ready (Email Mockup)</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background: #F3F4F6;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .email-wrapper {
+    max-width: 600px;
+    margin: 40px auto;
+    background: #FFFFFF;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .badge {
+    background: #F3F4F6;
+    text-align: center;
+    padding: 12px;
+    font-size: 11px;
+    color: #9CA3AF;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .email-body {
+    padding: 32px 32px 24px;
+  }
+  .greeting {
+    font-size: 15px;
+    color: #374151;
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9CA3AF;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    margin-top: 28px;
+  }
+
+  /* Data Readiness Bar */
+  .readiness-container {
+    margin: 20px 0 24px;
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .readiness-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .readiness-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+  }
+  .readiness-pct {
+    font-size: 14px;
+    font-weight: 700;
+    color: #22C55E;
+  }
+  .progress-bar-track {
+    width: 100%;
+    height: 10px;
+    background: #E5E7EB;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.3s ease;
+  }
+  .data-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .data-stat {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #F3F4F6;
+  }
+  .data-stat-label {
+    font-size: 13px;
+    color: #6B7280;
+  }
+  .data-stat-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  /* Insight Cards */
+  .insight-card {
+    border-left: 4px solid;
+    background: #F9FAFB;
+    padding: 16px 16px 14px;
+    margin-bottom: 10px;
+    border-radius: 0 6px 6px 0;
+  }
+  .insight-card.risk {
+    border-left-color: #EF4444;
+  }
+  .insight-card.attention {
+    border-left-color: #F59E0B;
+  }
+  .insight-card.info {
+    border-left-color: #3B82F6;
+  }
+  .insight-headline {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 4px;
+  }
+  .insight-detail {
+    font-size: 13px;
+    color: #6B7280;
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+  .severity-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .severity-tag.risk {
+    background: #FEE2E2;
+    color: #991B1B;
+  }
+  .severity-tag.attention {
+    background: #FEF3C7;
+    color: #92400E;
+  }
+  .severity-tag.info {
+    background: #DBEAFE;
+    color: #1E40AF;
+  }
+
+  /* Alert Banner */
+  .alert-banner {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 20px 0;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .alert-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .alert-text {
+    font-size: 13px;
+    color: #991B1B;
+    line-height: 1.5;
+  }
+  .alert-text strong {
+    color: #7F1D1D;
+  }
+
+  /* Remaining Count */
+  .remaining {
+    font-size: 13px;
+    color: #6B7280;
+    margin: 16px 0;
+    line-height: 1.5;
+  }
+
+  /* CTA Button */
+  .cta-container {
+    margin: 28px 0 20px;
+  }
+  .cta-button {
+    display: inline-block;
+    background: #111827;
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 28px;
+    border-radius: 6px;
+    text-decoration: none;
+    letter-spacing: 0.2px;
+  }
+
+  /* Signature */
+  .signature {
+    font-size: 14px;
+    color: #374151;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #F3F4F6;
+    line-height: 1.6;
+  }
+  .signature-name {
+    font-weight: 600;
+    color: #111827;
+  }
+  .signature-title {
+    font-size: 13px;
+    color: #9CA3AF;
+  }
+
+  /* Footer */
+  .email-footer {
+    padding: 20px 32px;
+    background: #F9FAFB;
+    border-top: 1px solid #E5E7EB;
+    text-align: center;
+  }
+  .footer-text {
+    font-size: 11px;
+    color: #9CA3AF;
+    line-height: 1.6;
+  }
+  .footer-link {
+    color: #6B7280;
+    text-decoration: underline;
+  }
+
+  /* Mockup label */
+  .mockup-label {
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    color: #9CA3AF;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-label">
+  EMAIL MOCKUP — E1: Larry Is Ready &middot; Triggered immediately on ERP sync &middot; Classification: Transactional
+</div>
+
+<div class="email-wrapper">
+
+  <div class="badge">
+    From: Rishi Isola &lt;rishi@komplai.com&gt; &middot; Subject: Larry found 4 things in your QuickBooks data
+  </div>
+
+  <div class="email-body">
+
+    <div class="greeting">
+      Hi Suman,<br><br>
+      Larry just finished analyzing your QuickBooks data. Here's where things stand.
+    </div>
+
+    <!-- DATA READINESS -->
+    <div class="section-label">Your Data at a Glance</div>
+
+    <div class="readiness-container">
+      <div class="readiness-header">
+        <span class="readiness-label">Data Completeness</span>
+        <span class="readiness-pct">87% Ready</span>
+      </div>
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" style="width: 87%; background: linear-gradient(90deg, #22C55E, #16A34A);"></div>
+      </div>
+      <div class="data-stats">
+        <div class="data-stat">
+          <span class="data-stat-label">Accounts synced</span>
+          <span class="data-stat-value">4 of 5</span>
+        </div>
+        <div class="data-stat">
+          <span class="data-stat-label">Transactions analyzed</span>
+          <span class="data-stat-value">12,847</span>
+        </div>
+        <div class="data-stat">
+          <span class="data-stat-label">Date range</span>
+          <span class="data-stat-value">Sep 2025 — Feb 2026</span>
+        </div>
+        <div class="data-stat">
+          <span class="data-stat-label">Vendors identified</span>
+          <span class="data-stat-value">143</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERT: Missing Bank Account -->
+    <div class="alert-banner">
+      <span class="alert-icon">&#9888;</span>
+      <div class="alert-text">
+        <strong>Bank accounts not connected.</strong> Larry can't run cash flow or runway analysis without bank data. Connect your bank accounts to unlock cash position insights and reconciliation tracking.
+      </div>
+    </div>
+
+    <!-- INSIGHTS -->
+    <div class="section-label">What Larry Found</div>
+
+    <div class="insight-card attention">
+      <div class="insight-headline">SaaS spend up 23% quarter-over-quarter</div>
+      <div class="insight-detail">
+        Your software subscriptions increased from $18,200/mo to $22,400/mo. The top drivers are three new tools added in Q4 that weren't in the prior quarter.
+      </div>
+      <span class="severity-tag attention">Needs Attention</span>
+    </div>
+
+    <div class="insight-card risk">
+      <div class="insight-headline">3 invoices overdue beyond 90 days — $47,200 outstanding</div>
+      <div class="insight-detail">
+        Meridian Corp ($28,500), Apex Solutions ($12,400), and TrueNorth Inc ($6,300) are all past 90-day terms. Combined, this represents 8.2% of your quarterly revenue.
+      </div>
+      <span class="severity-tag risk">Risk</span>
+    </div>
+
+    <div class="insight-card info">
+      <div class="insight-headline">New vendor detected: CloudOps Inc</div>
+      <div class="insight-detail">
+        $8,400/mo in charges starting December 2025. This vendor has no prior history in your data. Larry flagged it for review.
+      </div>
+      <span class="severity-tag info">New</span>
+    </div>
+
+    <div class="remaining">
+      Larry flagged <strong>4 patterns</strong> total, including a recurring charge increase from DataSync Pro (up 18% on auto-renewal).
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-container">
+      <a href="#" class="cta-button">Ask Larry about it &rarr;</a>
+    </div>
+
+    <!-- SIGNATURE -->
+    <div class="signature">
+      <span class="signature-name">— Rishi</span><br>
+      <span class="signature-title">Founder, Komplai</span>
+    </div>
+
+  </div>
+
+  <div class="email-footer">
+    <div class="footer-text">
+      You're receiving this because your QuickBooks data just finished syncing with Larry.<br>
+      <a href="#" class="footer-link">Manage preferences</a> &middot; <a href="#" class="footer-link">Unsubscribe</a>
+    </div>
+  </div>
+
+</div>
+
+<div class="mockup-label">
+  Sample data: QuickBooks &middot; Acme Corp &middot; 6 months of data &middot; 87% sync completeness<br>
+  Risk flag shown: Bank accounts not connected (maps to Inflect's "Blocked on Add Bank Accounts" signal)
+</div>
+
+</body>
+</html>
